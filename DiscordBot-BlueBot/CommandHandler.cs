@@ -32,7 +32,7 @@ namespace DiscordBot.BlueBot
             var context = new SocketCommandContext(_client, msg);
             int argPos = 0;
             if (msg.HasStringPrefix(Config.bot.cmdPrefix, ref argPos)
-                || msg.HasMentionPrefix(_client.CurrentUser, ref argPos))
+                || msg.HasMentionPrefix(_client.GetUser(535740106187735050), ref argPos))
             {
                 var result = await _service.ExecuteAsync(context, argPos, null);
                 if (!result.IsSuccess && result.Error != CommandError.UnknownCommand)
