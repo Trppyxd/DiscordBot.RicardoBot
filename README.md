@@ -17,12 +17,15 @@ By Default the bot is set to delete all commands calling the Bot, except the bot
 ## Commands
 All commands are preceded by a prefix, or the tag of the bot (eg. `@bot#1111`). The prefix can be set in `config.json`.
 
-Commands|Parameter(s)
--------  | -----------
-echo | **string** Message
-choose | **string** 1\|2\|3
-purge | **int** 1-100
-messageme | **null**
+Commands|Aliases|Parameter(s)
+-|-|-
+echo |say| **string** Message
+choose |pick| **string** 1\|2\|3
+purge |delete, del, prune| **int** amount = 10
+messageme | NA | **null**
+msg |pm, dm| **string** UserTag, **string** message
+getmessages|getmsgs, getpms, getdms|**string** UserTag, **int** amount = 10
+
 ## Todo
 - [x] purge command, fix error if the collection of messages contains one or more message that was created more than **14 days** ago, the command won't work.
 - [ ] Add database (`Sqlite`) support.
