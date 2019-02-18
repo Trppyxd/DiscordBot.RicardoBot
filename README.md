@@ -1,6 +1,6 @@
-# DiscordBot.BlueBot
+# DiscordBot.RicardoBot
 ## Description
-BlueBot is a fun side project that I started with the primary focuses on learning more about the Discord.Net API and creating something that would increase the quality of life thus making it easier to administrate a discord server, aswell as to have a tool that is fun to mess around with.
+RicardoBot is a fun side project that I started with the primary focuses on learning more about the Discord.Net API and creating something that would increase the quality of life thus making it easier to administrate a discord server, aswell as to have a tool that is fun to mess around with.
 ## Setup
 **Config.json**<br/>
 Upon running the program/solution a `./Resources/config.json` file will be generated.
