@@ -19,9 +19,6 @@ namespace DiscordBot.BlueBot
 
         public async Task StartAsync()
         {
-            //Console.WriteLine(DateTime.Now.AddDays(-14));
-            //Console.WriteLine(DateTime.Now);
-            //return;
             if(string.IsNullOrEmpty(Config.bot.token)) return;
             _client = new DiscordSocketClient(new DiscordSocketConfig
             {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data.Entity.Core.Metadata.Edm;
 using System.Linq;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
@@ -8,13 +9,15 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Discord.Rest;
 using Discord.WebSocket;
 
 namespace DiscordBot.BlueBot.Modules
 {
-    public class Misc : ModuleBase<SocketCommandContext>
+    public class CommandsModule : ModuleBase<SocketCommandContext>
     {
-        [Command("echo"), Alias("say")]
+        [Command("echo")]
+        [Alias("say")]
         public async Task Echo([Remainder]string message)
         {
             var embed = new EmbedBuilder();
@@ -26,22 +29,22 @@ namespace DiscordBot.BlueBot.Modules
             
         }
 
-
         [Command("who")]
-        public async Task who(string botName)
+        public async Task Who(string botName)
         {
             if (botName.ToLower() != "ricardobot") return;
 
             var embed = new EmbedBuilder();
             embed.WithTitle("Info");
-            embed.WithDescription("This bot is owned by Ken.\n[Code](https://github.com/Trppyxd/DiscordBot.RicardoBot/blob/master/README.md)");
+            embed.WithDescription("This bot is owned by Ken.\n" +
+                                  "[Code](https://github.com/Trppyxd/DiscordBot.RicardoBot/blob/master/README.md)");
             embed.WithColor(new Color(0, 255, 0));
 
             await Context.Channel.SendMessageAsync("", false, embed.Build());
         }
 
-        [Command("choose"), Alias("pick"), 
-         Summary("Picks one random option from a provided list.")]
+        [Command("choose"), Alias("pick")]
+        [Summary("Picks one random option from a provided list.")]
         public async Task ChooseOne([Remainder]string message)
         {
             string[] options = message.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
@@ -58,86 +61,65 @@ namespace DiscordBot.BlueBot.Modules
             await Context.Channel.SendMessageAsync("", false, embed.Build());
         }
 
-        [Command("purge"), Alias("delete", "del", "prune"), 
-         Summary("Deletes x amount of messages from a text channel.")]
+
+        [RequireUserPermission(ChannelPermission.ManageMessages, ErrorMessage = "User doesn't have permission to manage messages.")]
+        [Command("purge"), Alias("delete", "del", "prune")]
+        [Summary("Deletes x amount of messages from a text channel.")]
         public async Task PurgeChat(
-            [Summary("The amount of messages to delete, DEFAULT: 10, MAX: 100")]
-            int amount = 10, 
-            [Summary("The channel you wish to delete the messages from, DEFAULT: cmd origin")]
-            string channel = "")
+            [Summary("The channel you wish to delete the messages from.")]string channelName,
+            [Summary("The amount of messages to delete, DEFAULT: 10, MAX: 100")]int amount = 10,
+            [Summary("The type of message to delete: Self, Bot or All")]DeleteType deleteType = DeleteType.Self)
         {
-            if (amount > 100)
-                amount = 100;
+            if (amount > 100) amount = 100;
 
-            if (channel != "")
-            {
-                channel = new string((
-                    from c in channel
-                    where char.IsNumber(c)
-                    select c).ToArray());
-            }
+            if (!string.IsNullOrEmpty(channelName)) channelName = Utilities.TrimId(channelName);
+            var channel = Context.Client.GetChannel(UInt64.Parse(channelName));
 
-            var channelInstance = Context.Client.GetChannel(UInt64.Parse(channel));
-            
+            var channelInst = channel as SocketTextChannel;
+            var messages = await channelInst.GetMessagesAsync(amount).FlattenAsync();
 
-            if (channel == "")
-            {
-                channelInstance = Context.Channel as SocketTextChannel;
-                if (amount != 100) amount += 1;
-            }
+            var delete = messages.Where(m => m.Timestamp.LocalDateTime > DateTime.Now.ToLocalTime().AddDays(-14));
 
-            var channelA = channelInstance as SocketTextChannel;
-            var messages = await channelA.GetMessagesAsync(amount).FlattenAsync();
+            if (deleteType == DeleteType.Self) delete = delete.Where(m => m.Author.Id == Context.Message.Author.Id);
+            else if (deleteType == DeleteType.Bot) delete = delete.Where(m => m.Author.IsBot);
+            else if (deleteType != DeleteType.All) return;
 
-            var delete = 
-                from m in messages
-                where m.Timestamp.LocalDateTime > DateTime.Now.ToLocalTime().AddDays(-14)
-                select m;
-            
-            
-            await channelA.DeleteMessagesAsync(delete);
+            await channelInst.DeleteMessagesAsync(delete);
         }
 
-        [Command("purge"), Alias("delete", "del", "prune"),
-         Summary("Deletes x amount of messages from a text channel.")]
+
+        [Command("purge"), Alias("delete", "del", "prune")]
+        [Summary("Deletes x amount of messages from the current text channel.")]
+        [RequireUserPermission(ChannelPermission.ManageMessages)]
         public async Task PurgeChatOverride(
-
-            [Summary("The channel you wish to delete the messages from, DEFAULT: cmd origin")]
-            string channel = "")
+            [Summary("The amount of messages to delete; default 10; max 100")]int amount = 10,
+            [Summary("The type of message to delete: Self, Bot or All")]DeleteType deleteType = DeleteType.Self)
         {
-             int amount = 10;
+            var channel = Context.Message.Channel as SocketTextChannel;
 
+            if (amount > 100) amount = 100;
+            if (amount != 100) amount += 1; // To add the current command to the delete list.
 
-            channel = new string((
-                from c in channel
-                where char.IsNumber(c)
-                select c).ToArray());
+            var messages = await channel.GetMessagesAsync(amount).FlattenAsync();
 
-            Console.WriteLine(channel);
-            var channelInstance = Context.Client.GetChannel(UInt64.Parse(channel));
+            var delete = messages.Where(m => m.Timestamp.LocalDateTime > DateTime.Now.ToLocalTime().AddDays(-14));
 
+            if (deleteType == DeleteType.Self) delete = delete.Where(m => m.Author.Id == Context.Message.Author.Id);
+            else if (deleteType == DeleteType.Bot)delete = delete.Where(m => m.Author.IsBot);
+            else if (deleteType != DeleteType.All) return;
 
-            if (channel == "")
-            {
-                channelInstance = Context.Channel as SocketTextChannel;
-                if (amount != 100) amount += 1;
-            }
-
-            var channelFinal = channelInstance as SocketTextChannel;
-
-            var messages = await channelFinal.GetMessagesAsync(amount).FlattenAsync();
-
-            var delete =
-                from m in messages
-                where m.Timestamp.LocalDateTime > DateTime.Now.ToLocalTime().AddDays(-14)
-                select m;
-
-
-            await channelFinal.DeleteMessagesAsync(delete);
+            await channel.DeleteMessagesAsync(delete);
         }
 
-        [Command("messageme"), 
-         Summary("The bot sends a message via a private text channel.")]
+        public enum DeleteType
+        {
+            Self = 1,
+            Bot = 2,
+            All = 3
+        }
+
+        [Command("messageme")]
+        [Summary("The bot sends a message via a private text channel.")]
         public async Task MessageMe([Remainder]string message = "")
         {
             if (!IsUserMember(Context.User as SocketGuildUser)) return;
@@ -147,8 +129,9 @@ namespace DiscordBot.BlueBot.Modules
             await RemoveMessageIfNotInBotChannel();
         }
 
-        [Command("msg"), Alias("pm", "dm", "message"), 
-         Summary("Messages an User in private channel with a provided message.")]
+        [RequireUserPermission(GuildPermission.Administrator, ErrorMessage = "Admin only command.")]
+        [Command("msg"), Alias("pm", "dm", "message")]
+        [Summary("Messages an User in private channel with a provided message.")]
         public async Task PrivateMessage(string user = null, [Remainder]string message = "")
         {
             if (user == null) return;
@@ -161,8 +144,8 @@ namespace DiscordBot.BlueBot.Modules
 
         }
 
-        [Command("getmessages"), Alias("getmsgs", "getpms", "getdms"),
-         Summary("Gets the messages in a private channel with the specified user.")]
+        [Command("getmessages"), Alias("getmsgs", "getpms", "getdms")]
+        [Summary("Gets the messages in a private channel with the specified user.")]
         public async Task GetMessages(
             [Summary("Whose private messages to show.")]string user, 
             [Summary("The amount of messages to show, DEFAULT: 10, MAX: 100")]int amount = 10)
@@ -170,10 +153,7 @@ namespace DiscordBot.BlueBot.Modules
             if (amount > 100) amount = 100;
 
             if (user == null) return;
-            user = new string((
-                from c in user
-                where char.IsNumber(c)
-                select c).ToArray());
+            user = Utilities.TrimId(user);
 
             var dmChannel = await Context.Client.GetUser(UInt64.Parse(user)).GetOrCreateDMChannelAsync();
             var messages = await dmChannel.GetMessagesAsync(amount).FlattenAsync();
@@ -182,7 +162,7 @@ namespace DiscordBot.BlueBot.Modules
             
             foreach (var msg in messages)
             {
-                msgList.Add($"[{msg.Timestamp.ToLocalTime().ToString("dd/MM/yyyy hh:mm:ss")}] {msg.Author.Username} - \"{msg.Content}\"");
+                msgList.Add($"[{msg.Timestamp.ToLocalTime():dd/MM/yyyy hh:mm:ss}] {msg.Author.Username} - \"{msg.Content}\"");
             }
             msgList.Reverse();
 
@@ -199,8 +179,6 @@ namespace DiscordBot.BlueBot.Modules
 
             await Context.Message.Channel.SendMessageAsync("", false, embed.Build());
         }
-
-
 
         private bool IsUserMember(SocketGuildUser user)
         {
@@ -226,6 +204,26 @@ namespace DiscordBot.BlueBot.Modules
         public async Task GetData()
         {
             await Context.Channel.SendMessageAsync("Data has " + DataStorage.GetPairsCount() + " pairs.");
+        }
+
+        [Command("poll")]
+        public async Task StartPoll([Remainder] string PollMessage)
+        {
+            EmbedBuilder builder = new EmbedBuilder();
+            builder.Title = $"**A poll started by {Context.Message.Author.Username}**";
+            builder.Description = $"{PollMessage}";
+            builder.Footer = new EmbedFooterBuilder
+            {
+                Text = "Vote by 'clicking' on the emotes below.",
+            };
+
+            IEmote[] reactions = {new Emoji("✅"), new Emoji("❌") };
+
+            var sendMsg = await Context.Channel.SendMessageAsync(embed: builder.Build());
+            await Context.Message.DeleteAsync();
+            await sendMsg.AddReactionsAsync(reactions);
+
+
         }
     }
 }

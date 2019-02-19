@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Entity.Core.Mapping;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -15,6 +16,7 @@ namespace DiscordBot.BlueBot
     {
         private DiscordSocketClient _client;
         private CommandService _service;
+        //private int guildCount = 0;
 
         public async Task InitializeAsync(DiscordSocketClient client)
         {
@@ -24,8 +26,40 @@ namespace DiscordBot.BlueBot
                 CaseSensitiveCommands = false
             });
             await _service.AddModulesAsync(Assembly.GetEntryAssembly(), null);
+
+            //_client.GuildUnavailable += _client_GuildUnavailable;
+            //_client.GuildAvailable += _client_GuildAvailable;
+            _client.LatencyUpdated += HandleHeartbeat;
             _client.MessageReceived += HandleCommandAsync;
+            //_client.ReactionAdded += HandleReaction;
         }
+
+        //private async Task _client_GuildUnavailable(SocketGuild arg)
+        //{
+        //    --guildCount;
+        //    await _client.SetGameAsync($"Running on {guildCount} guilds.");
+        //}
+
+        //private async Task _client_GuildAvailable(SocketGuild arg)
+        //{
+        //    ++guildCount;
+        //    await _client.SetGameAsync($"Running on {guildCount} guilds.");
+        //}
+
+        //private async Task ClientOnReady()
+        //{
+        //    await _client.SetGameAsync($"Running on {_client.Guilds.Count} guilds.");
+        //}
+
+        private async Task HandleHeartbeat(int arg1, int arg2)
+        {
+            await _client.SetGameAsync($"Running on {_client.Guilds.Count} guilds.");
+        }
+
+        //private async Task HandleReaction(Cacheable<IUserMessage, ulong> arg1, ISocketMessageChannel arg2, SocketReaction arg3)
+        //{
+            
+        //}
 
         private async Task HandleCommandAsync(SocketMessage s)
         {
@@ -41,9 +75,7 @@ namespace DiscordBot.BlueBot
                 {
                     Console.WriteLine(result.ErrorReason);
                 }
-
-            }
-
+            }          
         }
     }
 }
