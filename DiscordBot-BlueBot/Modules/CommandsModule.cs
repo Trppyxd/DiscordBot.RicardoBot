@@ -11,6 +11,7 @@ using Discord;
 using Discord.Commands;
 using Discord.Rest;
 using Discord.WebSocket;
+using System.Text.RegularExpressions;
 
 namespace DiscordBot.BlueBot.Modules
 {
@@ -178,6 +179,29 @@ namespace DiscordBot.BlueBot.Modules
             embed.WithDescription(formatString);
 
             await Context.Message.Channel.SendMessageAsync("", false, embed.Build());
+        }
+
+        [RequireUserPermission(GuildPermission.Administrator)]
+        [Command("kick")]
+        public async Task UserMute([Remainder]string userMention)
+        {
+            if(string.IsNullOrEmpty(userMention)) return;
+
+            Regex chars = new Regex("[<>@#]");
+            var usersList = userMention.Replace(' ', ',');
+            var userMentions = chars.Replace(userMention, "").Split(' ');
+            
+            var userIds = userMentions.Select(UInt64.Parse).ToList();
+
+            //var userIdsList = userIds.ConvertAll(x => x.ToString());
+            foreach (var id in userIds)
+            {
+                await Context.Guild.GetUser(id).KickAsync();
+            }
+
+            var outputChannel = Context.Guild.Channels.Single(x => x.Name.Contains(Config.bot.botCommandChannel)) as SocketTextChannel;
+            // TODO Add try catch for exception if Context.Guild.Channels.Single throws an exception.
+            await outputChannel.SendMessageAsync($"Users: \"{usersList}\" have been kicked from the server.");
         }
 
         private bool IsUserMember(SocketGuildUser user)

@@ -19,8 +19,7 @@ namespace DiscordBot.BlueBot
         static Config()
         {
             // if ./Resources/ doesn't exist, makes it.
-            if (!Directory.Exists(configFolder))
-                Directory.CreateDirectory(configFolder);
+            if (!Directory.Exists(configFolder)) Directory.CreateDirectory(configFolder);
             // ./Resources/config.json doesn't exist, makes it
             if (!File.Exists(configFolder + "/" + configFile))
             {
