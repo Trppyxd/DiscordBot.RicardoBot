@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using DiscordBot_BlueBot;
 using Newtonsoft.Json;
 
 namespace DiscordBot.BlueBot
@@ -11,7 +13,6 @@ namespace DiscordBot.BlueBot
     class DataStorage
     {
         public static Dictionary<string, string> pairs = new Dictionary<string, string>();
-
         public static void AddPairToStorage(string key, string value)
         {
             pairs.Add(key, value);

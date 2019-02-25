@@ -5,6 +5,7 @@ using System.Data.Entity.Core.Metadata.Edm;
 using System.Linq;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
+using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading.Tasks;
 using Discord;
@@ -109,7 +110,11 @@ namespace DiscordBot.BlueBot.Modules
             else if (deleteType == DeleteType.Bot)delete = delete.Where(m => m.Author.IsBot);
             else if (deleteType != DeleteType.All) return;
 
+            int delCount = delete.Count();
+
             await channel.DeleteMessagesAsync(delete);
+
+            await channel.SendMessageAsync($"Deleted {delCount} messages of {deleteType}");
         }
 
         public enum DeleteType
@@ -123,7 +128,7 @@ namespace DiscordBot.BlueBot.Modules
         [Summary("The bot sends a message via a private text channel.")]
         public async Task MessageMe([Remainder]string message = "")
         {
-            if (!IsUserMember(Context.User as SocketGuildUser)) return;
+            if (!IsUserRole(Context.User as SocketGuildUser, "member")) return;
             var dmChannel = await Context.User.GetOrCreateDMChannelAsync();
             await dmChannel.SendMessageAsync(Utilities.GetAlert("PRIVATE_MESSAGE"));
 
@@ -163,7 +168,9 @@ namespace DiscordBot.BlueBot.Modules
             
             foreach (var msg in messages)
             {
-                msgList.Add($"[{msg.Timestamp.ToLocalTime():dd/MM/yyyy hh:mm:ss}] {msg.Author.Username} - \"{msg.Content}\"");
+                var msgContent = msg.Content;
+                if (msg.Content.Contains("||")) msgContent = msg.Content.Replace("||", "<SPOILER>");;
+                msgList.Add($"[{msg.Timestamp.ToLocalTime():dd/MM/yyyy hh:mm:ss}] {msg.Author.Username} - \"{msgContent}\"");
             }
             msgList.Reverse();
 
@@ -186,6 +193,7 @@ namespace DiscordBot.BlueBot.Modules
         public async Task UserMute([Remainder]string userMention)
         {
             if(string.IsNullOrEmpty(userMention)) return;
+            //if (!userMention.Contains('<')) return;
 
             Regex chars = new Regex("[<>@#]");
             var usersList = userMention.Replace(' ', ',');
@@ -204,14 +212,17 @@ namespace DiscordBot.BlueBot.Modules
             await outputChannel.SendMessageAsync($"Users: \"{usersList}\" have been kicked from the server.");
         }
 
-        private bool IsUserMember(SocketGuildUser user)
+        private bool IsUserRole(SocketGuildUser user, string role)
         {
-            string targetRoleName = "Member"; // TODO Remove hardcoded rolename
-            var result = from r in user.Guild.Roles
-                where r.Name == targetRoleName
-                select r.Id;
+            if (!user.Guild.Roles.Any()) return false;
+            string targetRoleName = role.ToLower();
+            var result = (user.Guild.Roles).Where(x => x.Name.ToLower() == targetRoleName).Select(x => x.Id);
+            //var result = from r in user.Guild.Roles
+            //    where r.Name.ToLower() == targetRoleName
+            //    select r.Id;
+            if (!result.Any()) return false;
             ulong roleID = result.FirstOrDefault();
-            if (roleID == 0) return false;
+            if (roleID == 0) return false; // ?
             var targetRole = user.Guild.GetRole(roleID);
             return user.Roles.Contains(targetRole);
         }

@@ -274,6 +274,7 @@
     <Compile Include="Core\DataStorage.cs" />
     <Compile Include="Core\UserAccount.cs" />
     <Compile Include="Core\UserAccounts.cs" />
+    <Compile Include="DBase.cs" />
     <Compile Include="DataStorage.cs" />
     <Compile Include="Modules\HelpModule.cs" />
     <Compile Include="Modules\CommandsModule.cs" />

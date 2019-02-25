@@ -31,7 +31,7 @@ namespace DiscordBot.BlueBot
             //_client.GuildAvailable += _client_GuildAvailable;
             _client.LatencyUpdated += HandleHeartbeat;
             _client.MessageReceived += HandleCommandAsync;
-            //_client.ReactionAdded += HandleReaction;
+            _client.ReactionAdded += HandleReaction;
         }
 
         //private async Task _client_GuildUnavailable(SocketGuild arg)
@@ -54,12 +54,13 @@ namespace DiscordBot.BlueBot
         private async Task HandleHeartbeat(int arg1, int arg2)
         {
             await _client.SetGameAsync($"Running on {_client.Guilds.Count} guilds.");
+            if (_client.Guilds.Count == 0) await _client.SetGameAsync("Waiting for heartbeat..."); // prereq. Must be in atleast 1 guild
         }
 
-        //private async Task HandleReaction(Cacheable<IUserMessage, ulong> arg1, ISocketMessageChannel arg2, SocketReaction arg3)
-        //{
+        private async Task HandleReaction(Cacheable<IUserMessage, ulong> arg1, ISocketMessageChannel channel, SocketReaction reaction)
+        {
             
-        //}
+        }
 
         private async Task HandleCommandAsync(SocketMessage s)
         {
