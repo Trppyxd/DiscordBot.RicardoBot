@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using DiscordBot.BlueBot.Core;
+using DiscordBot_BlueBot;
 using Newtonsoft.Json;
 
 namespace DiscordBot.BlueBot

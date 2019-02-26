@@ -13,6 +13,8 @@ using Discord.Commands;
 using Discord.Rest;
 using Discord.WebSocket;
 using System.Text.RegularExpressions;
+using DiscordBot.BlueBot.Core;
+using DiscordBot_BlueBot;
 
 namespace DiscordBot.BlueBot.Modules
 {
@@ -28,7 +30,39 @@ namespace DiscordBot.BlueBot.Modules
             embed.WithColor(new Color(0, 255, 0));
 
             await Context.Channel.SendMessageAsync("", false, embed.Build());
-            
+        }
+
+        [Command("testdb")]
+        public async Task TestDb()
+        {
+            var newUser = new UserAccount();
+            newUser.DiscordId = Int64.Parse(Context.User.Id.ToString());
+            newUser.Username = Context.User.Username;
+            newUser.JoinDate = Context.Message.Timestamp.DateTime.ToLocalTime();
+
+            var db = new DBase();
+            db.CreateUserTable();
+
+            string msg = "Users in database: " + Environment.NewLine;
+            db.AddUser(newUser);
+            foreach (var user in db.GetAllUsers())
+            {
+                msg += $"#{user.Id} - {user.JoinDate} - {user.DiscordId} - {user.Username}" + Environment.NewLine;
+            }
+            await Context.Channel.SendMessageAsync(msg);
+        }
+
+        [Command("users")]
+        public async Task UsersInDatabase()
+        {
+            var db = new DBase();
+
+            string msg = "Users in database: " + Environment.NewLine;
+            foreach (var user in db.GetAllUsers())
+            {
+                msg += $"#{user.Id} - [{user.JoinDate}] - {user.DiscordId} - {user.Username}" + Environment.NewLine;
+            }
+            await Context.Channel.SendMessageAsync(msg);
         }
 
         [Command("who")]
@@ -114,7 +148,7 @@ namespace DiscordBot.BlueBot.Modules
 
             await channel.DeleteMessagesAsync(delete);
 
-            await channel.SendMessageAsync($"Deleted {delCount} messages of {deleteType}");
+            await channel.SendMessageAsync($"<@{Context.User.Id}> Deleted {delCount} messages of {deleteType}.");
         }
 
         public enum DeleteType

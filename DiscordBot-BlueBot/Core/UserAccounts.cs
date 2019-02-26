@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace DiscordBot.BlueBot.Core
 {
-    class UserAccounts
+    public class UserAccounts
     {
+
     }
 }

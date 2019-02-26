@@ -19,7 +19,12 @@ namespace DiscordBot.BlueBot
 
         public async Task StartAsync()
         {
-            if(string.IsNullOrEmpty(Config.bot.token)) return;
+            if (string.IsNullOrEmpty(Config.bot.token))
+            {
+                Console.WriteLine("Token is not set.");
+                Console.ReadLine();
+                return;
+            }
             _client = new DiscordSocketClient(new DiscordSocketConfig
             {
                 LogLevel = LogSeverity.Debug

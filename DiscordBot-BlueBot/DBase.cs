@@ -1,60 +1,71 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SQLite;
+using SQLite;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DiscordBot.BlueBot.Core;
 
 namespace DiscordBot_BlueBot
 {
     public class DBase
     {
-        private SQLiteConnection _sqliteCon;
-        private SQLiteCommand _sqliteCmd;
+        private SQLiteConnection db;
+
 
         public DBase()
         {
-            _sqliteCon = new SQLiteConnection("Data Source=/Core/UserAccounts/UserDB.db;New=False;");
+            //var dbPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "UserDB.db");
+            if (!Directory.Exists($@"{AppDomain.CurrentDomain.BaseDirectory}Core\UserAccounts"))
+                Directory.CreateDirectory($@"{AppDomain.CurrentDomain.BaseDirectory}Core\UserAccounts");
+
+            var dbPath = $@"{AppDomain.CurrentDomain.BaseDirectory}Core\UserAccounts\UserDB.db";
+            db = new SQLiteConnection(dbPath);
         }
 
-        public void LoadData()
+        public void CreateUserTable()
         {
-
+            db.CreateTable<UserAccount>();
         }
 
-        public void ExecuteQuery(string txtQuery)
+        public void AddUser(UserAccount user)
         {
-            _sqliteCon.Open();
-            _sqliteCmd = _sqliteCon.CreateCommand();
-            _sqliteCmd.CommandText = txtQuery;
-            _sqliteCmd.ExecuteNonQuery();
-            _sqliteCon.Close();
+            db.Insert(user);
+            Console.WriteLine($"Added \"{user.DiscordId} - {user.Username}\" to the database.");
         }
 
-        //public DataTable SelectQuery(string query)
-        //{
-        //    SQLiteDataAdapter ad;
-        //    DataTable dt = new DataTable();
+        public void UpdateUser(UserAccount user)
+        {
+            db.Update(user);
+        }
 
-        //    try
-        //    {
-        //        SQLiteCommand cmd;
-        //        sqlite.Open(); //Initiate connection to the db
+        public List<UserAccount> GetAllUsers()
+        {
+            var table = db.Table<UserAccount>();
 
-        //        cmd = sqlite.CreateCommand();
-        //        cmd.CommandText = query; //set the passed query
-        //        ad = new SQLiteDataAdapter(cmd);
-        //        ad.Fill(dt); //fill the datasource
-        //    }
-        //    catch (SQLiteException ex)
-        //    {
-        //        //Add your exception code here.
-        //    }
+            return table.ToList();
+        }
 
-        //    sqlite.Close();
-        //    return dt;
-        //}
+        public void RemoveNote(UserAccount note)
+        {
+            db.Delete<UserAccount>(note.Id);
+        }
+
+        public void CreateTableWithData()
+        {
+            db.CreateTable<UserAccount>();
+            if (!db.Table<UserAccount>().Any())
+            {
+                var newUser = new UserAccount();
+                newUser.DiscordId = 189139492488085504;
+                newUser.Username = "TestName";
+                newUser.JoinDate = DateTime.Now.ToLocalTime();
+                db.Insert(newUser);
+            }
+        }
+
     }
 }
