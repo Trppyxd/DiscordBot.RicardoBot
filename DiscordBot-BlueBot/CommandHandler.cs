@@ -16,12 +16,12 @@ using Newtonsoft.Json;
 
 namespace DiscordBot.BlueBot
 {
-    class CommandHandler
+    public class CommandHandler
     {
         private DiscordSocketClient _client;
         private CommandService _service;
-        public bool antiRaidToggle;
-        public bool optionalBan;
+        public static bool antiRaidToggle;
+        public static bool optionalBan;
 
         //private int guildCount = 0;
 
@@ -83,7 +83,7 @@ namespace DiscordBot.BlueBot
                 await user.BanAsync();
                 return;
             }
-            else if(antiRaidToggle)
+            if(antiRaidToggle)
             {
                 await user.KickAsync();
                 return;
@@ -116,6 +116,7 @@ namespace DiscordBot.BlueBot
 
         private async Task HandleHeartbeat(int arg1, int arg2)
         {
+            Console.WriteLine($"optionalBan = {optionalBan}; antiRaidToggle = {antiRaidToggle}");
             await _client.SetGameAsync($"Running on {_client.Guilds.Count} guilds.");
             if (_client.Guilds.Count == 0) await _client.SetGameAsync("Waiting for heartbeat..."); // prereq. Must be in atleast 1 guild
         }

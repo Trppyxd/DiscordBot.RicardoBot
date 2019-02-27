@@ -273,15 +273,15 @@ namespace DiscordBot.BlueBot.Modules
         [Command("antiraid")]
         public async Task AntiRaid(string option, string ban = "off")
         {
-            var cmdHandler = new CommandHandler();
-
             if (option.ToLower() == "on")
-                cmdHandler.antiRaidToggle = true;
+                CommandHandler.antiRaidToggle = true;
             else if (option.ToLower() == "off")
-                cmdHandler.antiRaidToggle = false;
+                CommandHandler.antiRaidToggle = false;
 
             if (ban.ToLower() == "on")
-                cmdHandler.optionalBan = true;
+                CommandHandler.optionalBan = true;
+            else if (ban.ToLower() == "off")
+                CommandHandler.optionalBan = false;
         }
     }
 }
