@@ -126,13 +126,16 @@ namespace DiscordBot.BlueBot.Modules
             else if (deleteType != DeleteType.All) return;
 
             await channelInst.DeleteMessagesAsync(delete);
+
+            int delCount = delete.Count();
+            await Context.Message.Channel.SendMessageAsync($"<@{Context.User.Id}> : Deleted {delCount} messages of {deleteType}.");
         }
 
 
         [Command("purge"), Alias("delete", "del", "prune")]
         [Summary("Deletes x amount of messages from the current text channel.")]
         [RequireUserPermission(ChannelPermission.ManageMessages)]
-        public async Task PurgeChatOverride(
+        public async Task PurgeChatOverload(
             [Summary("The amount of messages to delete; default 10; max 100")]int amount = 10,
             [Summary("The type of message to delete: Self, Bot or All")]DeleteType deleteType = DeleteType.Self)
         {
@@ -149,10 +152,9 @@ namespace DiscordBot.BlueBot.Modules
             else if (deleteType == DeleteType.Bot)delete = delete.Where(m => m.Author.IsBot);
             else if (deleteType != DeleteType.All) return;
 
-            int delCount = delete.Count();
-
             await channel.DeleteMessagesAsync(delete);
 
+            int delCount = delete.Count();
             await channel.SendMessageAsync($"<@{Context.User.Id}> : Deleted {delCount} messages of {deleteType}.");
         }
 
