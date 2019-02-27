@@ -33,31 +33,6 @@ namespace DiscordBot.BlueBot.Modules
             await Context.Channel.SendMessageAsync("", false, embed.Build());
         }
 
-        //[Command("addusers")]
-        //public async Task AddUsersToDb()
-        //{
-        //    var gUsers = Context.Guild.Users;
-
-        //    var db = new DBase();
-        //    db.CreateUserTable();
-        //    var dbUserIds = db.GetAllUsers().Select(x => Convert.ToUInt64(x.DiscordId));
-        //    var userIdsNotInDb = gUsers.Select(x => x.Id).Where(x => !dbUserIds.Contains(x));
-        //    if(!userIdsNotInDb.Any()) return;
-
-        //    var newUser = new UserAccount();
-
-        //    SocketGuildUser gUser = null;
-        //    foreach (var userId in userIdsNotInDb)
-        //    { 
-        //        gUser = Context.Guild.GetUser(userId);
-        //        newUser.DiscordId = (long)gUser.Id;
-        //        newUser.Username = gUser.Username;
-        //        if (gUser.JoinedAt != null) newUser.JoinDate = (DateTimeOffset) gUser.JoinedAt;
-
-        //        db.AddUser(newUser);
-        //    }
-        //}
-
         [Command("users")]
         public async Task UsersInDatabase()
         {
@@ -102,7 +77,6 @@ namespace DiscordBot.BlueBot.Modules
 
             await Context.Channel.SendMessageAsync("", false, embed.Build());
         }
-
 
         [RequireUserPermission(ChannelPermission.ManageMessages, ErrorMessage = "User doesn't have permission to manage messages.")]
         [Command("purge"), Alias("delete", "del", "prune")]
@@ -277,12 +251,6 @@ namespace DiscordBot.BlueBot.Modules
             }
         }
 
-        [Command("data")]
-        public async Task GetData()
-        {
-            await Context.Channel.SendMessageAsync("Data has " + DataStorage.GetPairsCount() + " pairs.");
-        }
-
         [Command("poll")]
         public async Task StartPoll([Remainder] string PollMessage)
         {
@@ -297,10 +265,23 @@ namespace DiscordBot.BlueBot.Modules
             IEmote[] reactions = {new Emoji("✅"), new Emoji("❌") };
 
             var sendMsg = await Context.Channel.SendMessageAsync(embed: builder.Build());
+
             await Context.Message.DeleteAsync();
             await sendMsg.AddReactionsAsync(reactions);
+        }
 
+        [Command("antiraid")]
+        public async Task AntiRaid(string option, string ban = "off")
+        {
+            var cmdHandler = new CommandHandler();
 
+            if (option.ToLower() == "on")
+                cmdHandler.antiRaidToggle = true;
+            else if (option.ToLower() == "off")
+                cmdHandler.antiRaidToggle = false;
+
+            if (ban.ToLower() == "on")
+                cmdHandler.optionalBan = true;
         }
     }
 }

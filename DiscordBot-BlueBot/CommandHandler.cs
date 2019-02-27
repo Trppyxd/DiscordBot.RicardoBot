@@ -20,6 +20,9 @@ namespace DiscordBot.BlueBot
     {
         private DiscordSocketClient _client;
         private CommandService _service;
+        public bool antiRaidToggle;
+        public bool optionalBan;
+
         //private int guildCount = 0;
 
         public async Task InitializeAsync(DiscordSocketClient client)
@@ -75,6 +78,18 @@ namespace DiscordBot.BlueBot
 
         private async Task HandleUserJoin(SocketGuildUser user)
         {
+            if (antiRaidToggle && optionalBan)
+            {
+                await user.BanAsync();
+                return;
+            }
+            else if(antiRaidToggle)
+            {
+                await user.KickAsync();
+                return;
+            }
+
+
             var db = new DBase();
             db.CreateUserTable();
 
