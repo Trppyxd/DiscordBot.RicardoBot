@@ -21,18 +21,6 @@ namespace DiscordBot.BlueBot
             alerts = data.ToObject<Dictionary<string, string>>();
         }
 
-        public static string GetAlert(string key)
-        {
-            if (alerts.ContainsKey(key)) return alerts[key];
-            return "Invalid key";
-        }
-        
-        public static string GetAlert(string key, params object[] parameter)
-        {
-            if (alerts.ContainsKey(key)) return String.Format(alerts[key], parameter);
-            return "";
-        }
-
         public static bool ValidateFileExistance(string file)
         {
             if (!File.Exists(file))
@@ -40,7 +28,6 @@ namespace DiscordBot.BlueBot
                 File.WriteAllText(file, "");
                 return false;
             }
-
             return true;
         }
 
@@ -54,19 +41,5 @@ namespace DiscordBot.BlueBot
             char[] charsToTrim = {'<', '>', '@', '#'};
             return id.Trim(charsToTrim);
         }
-
-        //public static string GetFormattedAlert(string key, params object[] parameter)
-        //{
-        //    if (alerts.ContainsKey(key))
-        //    {
-        //        return String.Format(alerts[key], parameter);
-        //    }
-        //    return "";
-        //}
-
-        //public static string GetFormattedAlert(string key, object parameter)
-        //{
-        //    return GetFormattedAlert(key, new object[] {parameter});
-        //}
     }
 }

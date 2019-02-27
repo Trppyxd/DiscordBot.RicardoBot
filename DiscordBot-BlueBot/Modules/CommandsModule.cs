@@ -32,24 +32,29 @@ namespace DiscordBot.BlueBot.Modules
             await Context.Channel.SendMessageAsync("", false, embed.Build());
         }
 
-        [Command("testdb")]
+        [Command("addusers")]
         public async Task TestDb()
         {
-            var newUser = new UserAccount();
-            newUser.DiscordId = Int64.Parse(Context.User.Id.ToString());
-            newUser.Username = Context.User.Username;
-            newUser.JoinDate = Context.Message.Timestamp.DateTime.ToLocalTime();
+            var gUsers = Context.Guild.Users;
 
             var db = new DBase();
             db.CreateUserTable();
+            var dbUserIds = db.GetAllUsers().Select(x => Convert.ToUInt64(x.DiscordId));
+            var userIdsNotInDb = gUsers.Select(x => x.Id).Where(x => !dbUserIds.Contains(x));
+            if(!userIdsNotInDb.Any()) return;
 
-            string msg = "Users in database: " + Environment.NewLine;
-            db.AddUser(newUser);
-            foreach (var user in db.GetAllUsers())
-            {
-                msg += $"#{user.Id} - {user.JoinDate} - {user.DiscordId} - {user.Username}" + Environment.NewLine;
+            var newUser = new UserAccount();
+
+            SocketGuildUser gUser = null;
+            foreach (var userId in userIdsNotInDb)
+            { 
+                gUser = Context.Guild.GetUser(userId);
+                newUser.DiscordId = (long)gUser.Id;
+                newUser.Username = gUser.Username;
+                if (gUser.JoinedAt != null) newUser.JoinDate = (DateTimeOffset) gUser.JoinedAt;
+
+                db.AddUser(newUser);
             }
-            await Context.Channel.SendMessageAsync(msg);
         }
 
         [Command("users")]
@@ -148,7 +153,7 @@ namespace DiscordBot.BlueBot.Modules
 
             await channel.DeleteMessagesAsync(delete);
 
-            await channel.SendMessageAsync($"<@{Context.User.Id}> Deleted {delCount} messages of {deleteType}.");
+            await channel.SendMessageAsync($"<@{Context.User.Id}> : Deleted {delCount} messages of {deleteType}.");
         }
 
         public enum DeleteType
@@ -164,9 +169,9 @@ namespace DiscordBot.BlueBot.Modules
         {
             if (!IsUserRole(Context.User as SocketGuildUser, "member")) return;
             var dmChannel = await Context.User.GetOrCreateDMChannelAsync();
-            await dmChannel.SendMessageAsync(Utilities.GetAlert("PRIVATE_MESSAGE"));
+            await dmChannel.SendMessageAsync();
 
-            await RemoveMessageIfNotInBotChannel();
+            //await RemoveMessageIfNotInBotChannel();
         }
 
         [RequireUserPermission(GuildPermission.Administrator, ErrorMessage = "Admin only command.")]
@@ -181,7 +186,6 @@ namespace DiscordBot.BlueBot.Modules
             
             var dmChannel = await Context.Client.GetUser(UInt64.Parse(user)).GetOrCreateDMChannelAsync();
             await dmChannel.SendMessageAsync(message);
-
         }
 
         [Command("getmessages"), Alias("getmsgs", "getpms", "getdms")]

@@ -27,7 +27,8 @@ namespace DiscordBot.BlueBot
             }
             _client = new DiscordSocketClient(new DiscordSocketConfig
             {
-                LogLevel = LogSeverity.Debug
+                LogLevel = LogSeverity.Debug,
+                AlwaysDownloadUsers = true
             });
             _client.Log += Log;
 
@@ -45,3 +46,6 @@ namespace DiscordBot.BlueBot
         }
     }
 }
+/* TODO Add streaming via youtube url
+ *
+ */

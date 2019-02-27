@@ -11,11 +11,11 @@ namespace DiscordBot.BlueBot.Core
     {
         [PrimaryKey, AutoIncrement]
         public int Id { get; set; }
-        [MaxLength(255), Unique]
+        [Unique]
         public long DiscordId { get; set; }
         [MaxLength(255)]
         public string Username { get; set; }
         [MaxLength(255)]
-        public DateTime JoinDate { get; set; }
+        public DateTimeOffset JoinDate { get; set; }
     }
 }

@@ -34,8 +34,23 @@ namespace DiscordBot.BlueBot
             _client.LatencyUpdated += HandleHeartbeat;
             _client.MessageReceived += HandleCommandAsync;
             _client.ReactionAdded += HandleReaction;
+            _client.UserJoined += HandleUserJoin;
         }
 
+        private async Task HandleUserJoin(SocketGuildUser user)
+        {
+            var db = new DBase();
+            db.CreateUserTable();
+
+            var newUser = new UserAccount();
+
+            newUser.DiscordId = (long)user.Id;
+            newUser.Username = user.Username;
+            if (user.JoinedAt != null) newUser.JoinDate = (DateTimeOffset)user.JoinedAt;
+
+            db.AddUser(newUser);
+        }
+    
         //private async Task _client_GuildUnavailable(SocketGuild arg)
         //{
         //    --guildCount;

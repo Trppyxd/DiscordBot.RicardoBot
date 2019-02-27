@@ -40,5 +40,6 @@ namespace DiscordBot.BlueBot
         public string token;
         public string cmdPrefix;
         public string botCommandChannel;
+        public string logs;
     }
 }
