@@ -128,7 +128,7 @@ namespace DiscordBot.BlueBot.Modules
             await channelInst.DeleteMessagesAsync(delete);
 
             int delCount = delete.Count();
-            await Context.Message.Channel.SendMessageAsync($"<@{Context.User.Id}> : Deleted {delCount} messages of {deleteType}.");
+            await Context.Message.Channel.SendMessageAsync($"<@{Context.User.Id}> : Deleted {delCount} messages of {deleteType} in {channelName}");
         }
 
 
