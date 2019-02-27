@@ -15,8 +15,7 @@ namespace DiscordBot_BlueBot
     {
         private SQLiteConnection db;
 
-
-        public DBase()
+    public DBase()
         {
             //var dbPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "UserDB.db");
             if (!Directory.Exists($@"{AppDomain.CurrentDomain.BaseDirectory}Core\UserAccounts"))
