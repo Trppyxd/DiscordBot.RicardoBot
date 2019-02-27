@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.Data.Entity.Core.Mapping;
 using System.Linq;
@@ -9,6 +10,7 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using DiscordBot.BlueBot.Core;
+using DiscordBot.BlueBot.Modules;
 using DiscordBot_BlueBot;
 using Newtonsoft.Json;
 
@@ -27,7 +29,9 @@ namespace DiscordBot.BlueBot
             {
                 CaseSensitiveCommands = false
             });
+        
             await _service.AddModulesAsync(Assembly.GetEntryAssembly(), null);
+
 
             //_client.GuildUnavailable += _client_GuildUnavailable;
             //_client.GuildAvailable += _client_GuildAvailable;
@@ -35,6 +39,38 @@ namespace DiscordBot.BlueBot
             _client.MessageReceived += HandleCommandAsync;
             _client.ReactionAdded += HandleReaction;
             _client.UserJoined += HandleUserJoin;
+            _client.Ready += AddUsersToDb;
+        }
+
+        private async Task AddUsersToDb()
+        {
+            if (string.IsNullOrEmpty(Config.bot.guildId))
+            {
+            Console.WriteLine($"[ERROR] Config.bot.guildId is null or empty.");
+            return;
+            }
+
+            var guild = _client.GetGuild(Convert.ToUInt64(Config.bot.guildId));
+            var gUsers = guild.Users;
+
+            var db = new DBase();
+            db.CreateUserTable();
+            var dbUserIds = db.GetAllUsers().Select(x => Convert.ToUInt64(x.DiscordId));
+            var userIdsNotInDb = gUsers.Select(x => x.Id).Where(x => !dbUserIds.Contains(x));
+            //if (userIdsNotInDb.Any()) return;
+
+            var newUser = new UserAccount();
+
+            SocketGuildUser gUser = null;
+            foreach (var userId in userIdsNotInDb)
+            {
+                gUser = guild.GetUser(userId);
+                newUser.DiscordId = (long)gUser.Id;
+                newUser.Username = gUser.Username;
+                if (gUser.JoinedAt != null) newUser.JoinDate = (DateTimeOffset)gUser.JoinedAt;
+
+                db.AddUser(newUser);
+            }
         }
 
         private async Task HandleUserJoin(SocketGuildUser user)
@@ -53,19 +89,14 @@ namespace DiscordBot.BlueBot
     
         //private async Task _client_GuildUnavailable(SocketGuild arg)
         //{
-        //    --guildCount;
-        //    await _client.SetGameAsync($"Running on {guildCount} guilds.");
         //}
 
         //private async Task _client_GuildAvailable(SocketGuild arg)
         //{
-        //    ++guildCount;
-        //    await _client.SetGameAsync($"Running on {guildCount} guilds.");
         //}
 
         //private async Task ClientOnReady()
         //{
-        //    await _client.SetGameAsync($"Running on {_client.Guilds.Count} guilds.");
         //}
 
         private async Task HandleHeartbeat(int arg1, int arg2)
