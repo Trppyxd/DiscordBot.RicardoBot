@@ -6,6 +6,9 @@ using System.Runtime.Remoting.Contexts;
 using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading.Tasks;
+using Discord.WebSocket;
+using DiscordBot.BlueBot.Core;
+using DiscordBot_BlueBot;
 using Newtonsoft.Json;
 
 namespace DiscordBot.BlueBot
