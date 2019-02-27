@@ -13,6 +13,7 @@ using Discord.Commands;
 using Discord.Rest;
 using Discord.WebSocket;
 using System.Text.RegularExpressions;
+using System.Threading;
 using DiscordBot.BlueBot.Core;
 using DiscordBot_BlueBot;
 
@@ -32,30 +33,30 @@ namespace DiscordBot.BlueBot.Modules
             await Context.Channel.SendMessageAsync("", false, embed.Build());
         }
 
-        [Command("addusers")]
-        public async Task TestDb()
-        {
-            var gUsers = Context.Guild.Users;
+        //[Command("addusers")]
+        //public async Task AddUsersToDb()
+        //{
+        //    var gUsers = Context.Guild.Users;
 
-            var db = new DBase();
-            db.CreateUserTable();
-            var dbUserIds = db.GetAllUsers().Select(x => Convert.ToUInt64(x.DiscordId));
-            var userIdsNotInDb = gUsers.Select(x => x.Id).Where(x => !dbUserIds.Contains(x));
-            if(!userIdsNotInDb.Any()) return;
+        //    var db = new DBase();
+        //    db.CreateUserTable();
+        //    var dbUserIds = db.GetAllUsers().Select(x => Convert.ToUInt64(x.DiscordId));
+        //    var userIdsNotInDb = gUsers.Select(x => x.Id).Where(x => !dbUserIds.Contains(x));
+        //    if(!userIdsNotInDb.Any()) return;
 
-            var newUser = new UserAccount();
+        //    var newUser = new UserAccount();
 
-            SocketGuildUser gUser = null;
-            foreach (var userId in userIdsNotInDb)
-            { 
-                gUser = Context.Guild.GetUser(userId);
-                newUser.DiscordId = (long)gUser.Id;
-                newUser.Username = gUser.Username;
-                if (gUser.JoinedAt != null) newUser.JoinDate = (DateTimeOffset) gUser.JoinedAt;
+        //    SocketGuildUser gUser = null;
+        //    foreach (var userId in userIdsNotInDb)
+        //    { 
+        //        gUser = Context.Guild.GetUser(userId);
+        //        newUser.DiscordId = (long)gUser.Id;
+        //        newUser.Username = gUser.Username;
+        //        if (gUser.JoinedAt != null) newUser.JoinDate = (DateTimeOffset) gUser.JoinedAt;
 
-                db.AddUser(newUser);
-            }
-        }
+        //        db.AddUser(newUser);
+        //    }
+        //}
 
         [Command("users")]
         public async Task UsersInDatabase()
@@ -65,7 +66,7 @@ namespace DiscordBot.BlueBot.Modules
             string msg = "Users in database: " + Environment.NewLine;
             foreach (var user in db.GetAllUsers())
             {
-                msg += $"#{user.Id} - [{user.JoinDate}] - {user.DiscordId} - {user.Username}" + Environment.NewLine;
+                msg += $"#{user.Id} [{user.JoinDate:dd/MM/yy hh:mm:ss}] - {user.DiscordId} - {user.Username}" + Environment.NewLine;
             }
             await Context.Channel.SendMessageAsync(msg);
         }
@@ -113,8 +114,9 @@ namespace DiscordBot.BlueBot.Modules
         {
             if (amount > 100) amount = 100;
 
-            if (!string.IsNullOrEmpty(channelName)) channelName = Utilities.TrimId(channelName);
-            var channel = Context.Client.GetChannel(UInt64.Parse(channelName));
+            string channelId = "";
+            if (!string.IsNullOrEmpty(channelName)) channelId = Utilities.TrimId(channelName);
+            var channel = Context.Client.GetChannel(UInt64.Parse(channelId));
 
             var channelInst = channel as SocketTextChannel;
             var messages = await channelInst.GetMessagesAsync(amount).FlattenAsync();
@@ -128,7 +130,7 @@ namespace DiscordBot.BlueBot.Modules
             await channelInst.DeleteMessagesAsync(delete);
 
             int delCount = delete.Count();
-            await Context.Message.Channel.SendMessageAsync($"<@{Context.User.Id}> : Deleted {delCount} messages of {deleteType} in {channelName}");
+            await Context.Message.Channel.SendMessageAsync($"<@{Context.User.Id}> : Deleted {delCount} messages of type \"{deleteType}\" in \"{Context.Guild.GetChannel(UInt64.Parse(channelId)).Name}\" channel.");
         }
 
 
@@ -209,7 +211,7 @@ namespace DiscordBot.BlueBot.Modules
             foreach (var msg in messages)
             {
                 var msgContent = msg.Content;
-                if (msg.Content.Contains("||")) msgContent = msg.Content.Replace("||", "<SPOILER>");;
+                if (msg.Content.Contains("||")) msgContent = msg.Content.Replace("||", "<SPOILER>"); // Scuffed fix for spoiler tag sanitization. Waiting for hotfix.
                 msgList.Add($"[{msg.Timestamp.ToLocalTime():dd/MM/yyyy hh:mm:ss}] {msg.Author.Username} - \"{msgContent}\"");
             }
             msgList.Reverse();

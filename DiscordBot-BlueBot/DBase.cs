@@ -34,7 +34,7 @@ namespace DiscordBot_BlueBot
         public void AddUser(UserAccount user)
         {
             db.Insert(user);
-            Console.WriteLine($"[DB] {DateTime.Now.ToLocalTime()} | Added \"{user.DiscordId} - {user.Username}\" to the database.");
+            Console.WriteLine($"[DB] {DateTime.Now.ToLocalTime()} > Added user {user.DiscordId} - \"{user.Username}\" to the database.");
         }
 
         public void UpdateUser(UserAccount user)
