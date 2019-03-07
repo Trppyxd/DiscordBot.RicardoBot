@@ -41,7 +41,7 @@ namespace DiscordBot.BlueBot
         /// <returns>Trimmed id consisting only of numbers.</returns>
         public static string TrimId(string id)
         {
-            char[] charsToTrim = {'<', '>', '@', '#'};
+            char[] charsToTrim = {'<', '>', '@', '#', '"', '\''};
             return id.Trim(charsToTrim);
         }
     }

@@ -79,6 +79,7 @@ namespace DiscordBot.BlueBot.Modules
         }
 
         [RequireUserPermission(ChannelPermission.ManageMessages, ErrorMessage = "User doesn't have permission to manage messages.")]
+        [RequireOwner]
         [Command("purge"), Alias("delete", "del", "prune")]
         [Summary("Deletes x amount of messages from a text channel.")]
         public async Task PurgeChat(
@@ -86,11 +87,14 @@ namespace DiscordBot.BlueBot.Modules
             [Summary("The amount of messages to delete, DEFAULT: 10, MAX: 100")]int amount = 10,
             [Summary("The type of message to delete: Self, Bot or All")]DeleteType deleteType = DeleteType.Self)
         {
+            if (string.IsNullOrWhiteSpace(channelName)) return;;
             if (amount > 100) amount = 100;
 
             string channelId = "";
-            if (!string.IsNullOrEmpty(channelName)) channelId = Utilities.TrimId(channelName);
+            channelId = Utilities.TrimId(channelName);
             var channel = Context.Client.GetChannel(UInt64.Parse(channelId));
+            if (channel == null) return;
+            
 
             var channelInst = channel as SocketTextChannel;
             var messages = await channelInst.GetMessagesAsync(amount).FlattenAsync();
@@ -110,7 +114,8 @@ namespace DiscordBot.BlueBot.Modules
 
         [Command("purge"), Alias("delete", "del", "prune")]
         [Summary("Deletes x amount of messages from the current text channel.")]
-        [RequireUserPermission(ChannelPermission.ManageMessages)]
+        //[RequireUserPermission(ChannelPermission.ManageMessages)]
+        [RequireBotPermission(ChannelPermission.ManageMessages)]
         public async Task PurgeChatOverload(
             [Summary("The amount of messages to delete; default 10; max 100")]int amount = 10,
             [Summary("The type of message to delete: Self, Bot or All")]DeleteType deleteType = DeleteType.Self)
@@ -134,6 +139,34 @@ namespace DiscordBot.BlueBot.Modules
             await channel.SendMessageAsync($"<@{Context.User.Id}> : Deleted {delCount} messages of {deleteType}.");
         }
 
+        [Command("purgeu"), Alias("deleteu", "delu", "pruneu")]
+        [Summary("Deletes x amount of messages from the current text channel.")]
+        [RequireOwner]
+        [RequireBotPermission(ChannelPermission.ManageMessages)]
+        public async Task PurgeChatOverloadUser(
+            [Summary("The amount of messages to delete; default 10; max 100")]int amount,
+            [Summary("The type of message to delete: Self, Bot or All")]string user)
+        {
+            if (string.IsNullOrWhiteSpace(user)) return;
+
+            var channel = Context.Message.Channel as SocketTextChannel;
+            ulong userId = UInt64.Parse(Utilities.TrimId(user));
+
+            if (amount > 100) amount = 100;
+            if (amount != 100) amount += 1; // To add the current command to the delete list.
+
+            var messages = await channel.GetMessagesAsync(amount).FlattenAsync();
+
+            var delete = messages.Where(m => m.Timestamp.LocalDateTime > DateTime.Now.ToLocalTime().AddDays(-14));
+            delete = delete.Where(m => m.Author.Id == userId);
+
+
+            await channel.DeleteMessagesAsync(delete);
+
+            int delCount = delete.Count();
+            await channel.SendMessageAsync($"<@{Context.User.Id}> : Deleted {delCount} messages of user <@{userId}>.");
+        }
+
         public enum DeleteType
         {
             Self = 1,
@@ -152,7 +185,7 @@ namespace DiscordBot.BlueBot.Modules
             //await RemoveMessageIfNotInBotChannel();
         }
 
-        [RequireUserPermission(GuildPermission.Administrator, ErrorMessage = "Admin only command.")]
+        //[RequireUserPermission(GuildPermission.Administrator, ErrorMessage = "Admin only command.")]
         [Command("msg"), Alias("pm", "dm", "message")]
         [Summary("Messages an User in private channel with a provided message.")]
         public async Task PrivateMessage(string user = null, [Remainder]string message = "")
