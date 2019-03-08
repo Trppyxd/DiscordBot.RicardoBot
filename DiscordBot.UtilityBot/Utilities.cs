@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.Remoting.Contexts;
 using System.Runtime.Remoting.Messaging;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Discord.WebSocket;
 using DiscordBot.BlueBot.Core;
@@ -39,10 +40,12 @@ namespace DiscordBot.BlueBot
         /// </summary>
         /// <param name="id"></param>
         /// <returns>Trimmed id consisting only of numbers.</returns>
-        public static string TrimId(string id)
+        public static string CleanId(string id)
         {
-            char[] charsToTrim = {'<', '>', '@', '#', '"', '\''};
-            return id.Trim(charsToTrim);
+            Regex regex = new Regex(@"\d+");
+            return regex.Match(id).Value;
+            //char[] charsToTrim = {'<', '>', '@', '#', '"', '\'', '/', '\\'};
+            //return id.Trim(charsToTrim);
         }
     }
 }

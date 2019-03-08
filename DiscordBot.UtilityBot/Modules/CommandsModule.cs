@@ -91,7 +91,7 @@ namespace DiscordBot.BlueBot.Modules
             if (amount > 100) amount = 100;
 
             string channelId = "";
-            channelId = Utilities.TrimId(channelName);
+            channelId = Utilities.CleanId(channelName);
             var channel = Context.Client.GetChannel(UInt64.Parse(channelId));
             if (channel == null) return;
             
@@ -150,7 +150,7 @@ namespace DiscordBot.BlueBot.Modules
             if (string.IsNullOrWhiteSpace(user)) return;
 
             var channel = Context.Message.Channel as SocketTextChannel;
-            ulong userId = UInt64.Parse(Utilities.TrimId(user));
+            ulong userId = UInt64.Parse(Utilities.CleanId(user));
 
             if (amount > 100) amount = 100;
             if (amount != 100) amount += 1; // To add the current command to the delete list.
@@ -208,7 +208,7 @@ namespace DiscordBot.BlueBot.Modules
             if (amount > 100) amount = 100;
 
             if (user == null) return;
-            user = Utilities.TrimId(user);
+            user = Utilities.CleanId(user);
 
             var dmChannel = await Context.Client.GetUser(UInt64.Parse(user)).GetOrCreateDMChannelAsync();
             var messages = await dmChannel.GetMessagesAsync(amount).FlattenAsync();
@@ -239,7 +239,7 @@ namespace DiscordBot.BlueBot.Modules
 
         [RequireUserPermission(GuildPermission.Administrator)]
         [Command("kick")]
-        public async Task UserMute([Remainder]string userMention)
+        public async Task KickUser([Remainder]string userMention)
         {
             if(string.IsNullOrEmpty(userMention)) return;
             //if (!userMention.Contains('<')) return;
@@ -315,6 +315,14 @@ namespace DiscordBot.BlueBot.Modules
                 CommandHandler.optionalBan = true;
             else if (ban.ToLower() == "off")
                 CommandHandler.optionalBan = false;
+        }
+
+        [Command("convertid")]
+        public async Task ConvertId(string Id)
+        {
+            string oldId = Id;
+            Id = Utilities.CleanId(Id);
+            await Context.Channel.SendMessageAsync($"User: <@{Id}>\nBefore: \\{oldId}\nAfter: {Id}");
         }
     }
 }
