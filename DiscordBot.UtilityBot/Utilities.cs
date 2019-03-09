@@ -11,11 +11,13 @@ using Discord.WebSocket;
 using DiscordBot.BlueBot.Core;
 using DiscordBot_BlueBot;
 using Newtonsoft.Json;
+// ReSharper disable All
 
 namespace DiscordBot.BlueBot
 {
     class Utilities
     {
+        // ReSharper disable once NotAccessedField.Local
         private static Dictionary<string, string> alerts;
 
         static Utilities()
@@ -43,9 +45,8 @@ namespace DiscordBot.BlueBot
         public static string CleanId(string id)
         {
             Regex regex = new Regex(@"\d+");
-            return regex.Match(id).Value;
-            //char[] charsToTrim = {'<', '>', '@', '#', '"', '\'', '/', '\\'};
-            //return id.Trim(charsToTrim);
+            var result = regex.Matches(id).Cast<Match>().Select(x => x.Value).ToArray();
+            return String.Join(" ", result);
         }
     }
 }
