@@ -18,4 +18,16 @@ namespace DiscordBot.BlueBot.Core
         [MaxLength(255)]
         public DateTimeOffset JoinDate { get; set; }
     }
+
+    public class MessageInfo
+    {
+        [PrimaryKey, AutoIncrement]
+        public int Id { get; set; }
+        [Unique]
+        public long DiscordId { get; set; }
+        [MaxLength(2000)]
+        public string Message { get; set; }
+        [MaxLength(255)]
+        public DateTimeOffset MessageDate { get; set; }
+    }
 }
