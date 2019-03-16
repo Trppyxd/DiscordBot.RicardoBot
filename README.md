@@ -12,7 +12,7 @@ Variable | Requirement | Description
 **cmdPrefix** | High | Prefix that is preceding a command. If left empty then u can only call commands only via the bot's tag.
 **botCommandChannel** | Optional | Name of the channel where you're going to call the bot commands from. By Default the bot is set to delete all messages calling the Bot, except the `botCommandChannel`.
 
-By Default the bot is set to delete all commands calling the Bot, except the bot channel that's set in `config.json`
+~~By Default the bot is set to delete all commands calling the Bot, except the bot channel that's set in `config.json`~~
 
 ## Commands
 All commands are preceded by a prefix, or the tag of the bot (eg. `@bot#1111`). The prefix can be set in `config.json`.
