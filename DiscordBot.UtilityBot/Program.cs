@@ -28,7 +28,8 @@ namespace DiscordBot.BlueBot
             _client = new DiscordSocketClient(new DiscordSocketConfig
             {
                 LogLevel = LogSeverity.Debug,
-                AlwaysDownloadUsers = true
+                AlwaysDownloadUsers = true,
+                MessageCacheSize = 300,
             });
             _client.Log += Log;
 
