@@ -8,14 +8,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DiscordBot.BlueBot.Core;
-using DiscordBot_BlueBot.Core;
 
 namespace DiscordBot_BlueBot
 {
     public class DBase
     {
         private SQLiteConnection db;
-        private string dbPath = $@"{AppDomain.CurrentDomain.BaseDirectory}Core\UserAccounts\UserDB.db";
+        public static string dbPath = $@"{AppDomain.CurrentDomain.BaseDirectory}Core\UserAccounts\UserDB.db";
 
         public DBase()
         {

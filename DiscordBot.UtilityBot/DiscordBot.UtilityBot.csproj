@@ -277,6 +277,7 @@
   <ItemGroup>
     <Compile Include="CommandHandler.cs" />
     <Compile Include="Config.cs" />
+    <Compile Include="Constants.cs" />
     <Compile Include="Core\UserAccount.cs" />
     <Compile Include="DBase.cs" />
     <Compile Include="DataStorage.cs" />

@@ -16,6 +16,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using DiscordBot.BlueBot.Core;
 using DiscordBot_BlueBot;
+using SQLite;
 
 namespace DiscordBot.BlueBot.Modules
 {
@@ -44,6 +45,26 @@ namespace DiscordBot.BlueBot.Modules
                 msg += $"#{user.Id} [{user.JoinDate:dd/MM/yy hh:mm:ss}] - {user.DiscordId} - {user.Username}" + Environment.NewLine;
             }
             await Context.Channel.SendMessageAsync(msg);
+        }
+
+        [RequireOwner]
+        [Command("editdb")]
+        public async Task DatabaseEditUser(ulong discordId, string dbProperty, string value)
+        {
+
+            using (SQLiteConnection db = new SQLiteConnection(DBase.dbPath))
+            {
+                SQLiteCommand cmd = new SQLiteCommand(db);
+                cmd.CommandText = $@"Update UserAccount Set {dbProperty} = {value} Where DiscordId = {discordId}";
+
+                int result = cmd.ExecuteNonQuery();
+                if (result == 1)
+                {
+                    Console.WriteLine($"[DB] Edit Successful > User {discordId}, property {dbProperty}, new value {value}");
+                }
+                else { Console.WriteLine($"[DB-ERROR] Couldn't change property > User {discordId}, property {dbProperty}, new value {value}"); }
+
+            }
         }
 
         [Command("who")]
@@ -87,14 +108,14 @@ namespace DiscordBot.BlueBot.Modules
             [Summary("The amount of messages to delete, DEFAULT: 10, MAX: 100")]int amount = 10,
             [Summary("The type of message to delete: Self, Bot or All")]DeleteType deleteType = DeleteType.Self)
         {
-            if (string.IsNullOrWhiteSpace(channelName)) return;;
+            if (string.IsNullOrWhiteSpace(channelName)) return; ;
             if (amount > 100) amount = 100;
 
             string channelId = "";
             channelId = Utilities.CleanId(channelName);
             var channel = Context.Client.GetChannel(UInt64.Parse(channelId));
             if (channel == null) return;
-            
+
 
             var channelInst = channel as SocketTextChannel;
             var messages = await channelInst.GetMessagesAsync(amount).FlattenAsync();
@@ -130,7 +151,7 @@ namespace DiscordBot.BlueBot.Modules
             var delete = messages.Where(m => m.Timestamp.LocalDateTime > DateTime.Now.ToLocalTime().AddDays(-14));
 
             if (deleteType == DeleteType.Self) delete = delete.Where(m => m.Author.Id == Context.Message.Author.Id);
-            else if (deleteType == DeleteType.Bot)delete = delete.Where(m => m.Author.IsBot);
+            else if (deleteType == DeleteType.Bot) delete = delete.Where(m => m.Author.IsBot);
             else if (deleteType != DeleteType.All) return;
 
             await channel.DeleteMessagesAsync(delete);
@@ -192,9 +213,9 @@ namespace DiscordBot.BlueBot.Modules
         {
             if (user == null) return;
             user = new string((from c in user
-                where char.IsNumber(c)
-                select c).ToArray());
-            
+                               where char.IsNumber(c)
+                               select c).ToArray());
+
             var dmChannel = await Context.Client.GetUser(UInt64.Parse(user)).GetOrCreateDMChannelAsync();
             await dmChannel.SendMessageAsync(message);
         }
@@ -202,7 +223,7 @@ namespace DiscordBot.BlueBot.Modules
         [Command("getmessages"), Alias("getmsgs", "getpms", "getdms")]
         [Summary("Gets the messages in a private channel with the specified user.")]
         public async Task GetMessages(
-            [Summary("Whose private messages to show.")]string user, 
+            [Summary("Whose private messages to show.")]string user,
             [Summary("The amount of messages to show, DEFAULT: 10, MAX: 100")]int amount = 10)
         {
             if (amount > 100) amount = 100;
@@ -214,7 +235,7 @@ namespace DiscordBot.BlueBot.Modules
             var messages = await dmChannel.GetMessagesAsync(amount).FlattenAsync();
 
             var msgList = new List<string>();
-            
+
             foreach (var msg in messages)
             {
                 var msgContent = msg.Content;
@@ -241,12 +262,12 @@ namespace DiscordBot.BlueBot.Modules
         [Command("kick")]
         public async Task KickUser([Remainder]string userMention)
         {
-            if(string.IsNullOrEmpty(userMention)) return;
+            if (string.IsNullOrEmpty(userMention)) return;
 
             Regex chars = new Regex("[<>@#!]");
             var usersList = Utilities.CleanId(userMention);
             var userMentions = usersList.Split(' ');
-            
+
             var userIds = userMentions.Select(UInt64.Parse).ToList();
 
             //var userIdsList = userIds.ConvertAll(x => x.ToString());
@@ -300,7 +321,7 @@ namespace DiscordBot.BlueBot.Modules
                 Text = "Vote by 'clicking' on the emotes below.",
             };
 
-            IEmote[] reactions = {new Emoji("✅"), new Emoji("❌") };
+            IEmote[] reactions = { new Emoji("✅"), new Emoji("❌") };
 
             var sendMsg = await Context.Channel.SendMessageAsync(embed: builder.Build());
 
