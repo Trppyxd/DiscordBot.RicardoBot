@@ -128,7 +128,7 @@ namespace DiscordBot.BlueBot
 
         private async Task HandleHeartbeat(int arg1, int arg2)
         {
-            Console.WriteLine($"[DEBUG]optionalBan = {optionalBan}; antiRaidToggle = {antiRaidToggle}"); // TODO remove Debug line
+            //Console.WriteLine($"[DEBUG]optionalBan = {optionalBan}; antiRaidToggle = {antiRaidToggle}"); // TODO remove Debug line
             await _client.SetGameAsync($"Running on {_client.Guilds.Count} guilds.");
             if (_client.Guilds.Count == 0) await _client.SetGameAsync("Waiting for heartbeat..."); // prereq. Must be in atleast 1 guild
         }

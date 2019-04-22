@@ -49,7 +49,7 @@ namespace DiscordBot.BlueBot.Modules
 
         [RequireOwner]
         [Command("editdb")]
-        public async Task DatabaseEditUser(ulong discordId, string dbProperty, string value)
+        public async Task DatabaseEditUser(ulong discordId, string dbProperty, int value)
         {
 
             using (SQLiteConnection db = new SQLiteConnection(DBase.dbPath))
@@ -61,10 +61,21 @@ namespace DiscordBot.BlueBot.Modules
                 if (result == 1)
                 {
                     Console.WriteLine($"[DB] Edit Successful > User {discordId}, property {dbProperty}, new value {value}");
+                    await Context.Channel.SendMessageAsync(
+                        $"Edit Successful > User <@{discordId}>, property {dbProperty}, new value {value}");
                 }
                 else { Console.WriteLine($"[DB-ERROR] Couldn't change property > User {discordId}, property {dbProperty}, new value {value}"); }
 
             }
+        }
+
+        [Command("whoami")]
+        public async Task WhoAmI()
+        {
+            var user = Context.User;
+            await Context.Channel.SendMessageAsync(
+                $"WhoAmI:\nName:{user.Username} - ID:{user.Id}\nCreated At:{user.CreatedAt}\nIs Bot:{user.IsBot}\n");
+
         }
 
         [Command("who")]
