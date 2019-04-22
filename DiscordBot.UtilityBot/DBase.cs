@@ -8,20 +8,21 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DiscordBot.BlueBot.Core;
+using DiscordBot_BlueBot.Core;
 
 namespace DiscordBot_BlueBot
 {
     public class DBase
     {
         private SQLiteConnection db;
+        private string dbPath = $@"{AppDomain.CurrentDomain.BaseDirectory}Core\UserAccounts\UserDB.db";
 
-    public DBase()
+        public DBase()
         {
             //var dbPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "UserDB.db");
             if (!Directory.Exists($@"{AppDomain.CurrentDomain.BaseDirectory}Core\UserAccounts"))
                 Directory.CreateDirectory($@"{AppDomain.CurrentDomain.BaseDirectory}Core\UserAccounts");
 
-            var dbPath = $@"{AppDomain.CurrentDomain.BaseDirectory}Core\UserAccounts\UserDB.db";
             db = new SQLiteConnection(dbPath);
         }
 
@@ -41,16 +42,32 @@ namespace DiscordBot_BlueBot
             db.Update(user);
         }
 
+        public void EditUser(ulong discordId, string dbProperty, string value)
+        {
+            SQLiteCommand cmd = new SQLiteCommand(db);
+            cmd.CommandText = $@"Update UserAccount Set {dbProperty} = {value} Where DiscordId = {discordId}";
+
+            int result = cmd.ExecuteNonQuery();
+            if (result == 1)
+            {
+                Console.WriteLine($"[DB] Edit Successful > User {discordId}, property {dbProperty}, new value {value}");
+            }
+            else { Console.WriteLine($"[DB-ERROR] Couldn't change property > User {discordId}, property {dbProperty}, new value {value}"); }
+        }
+        
+        
+
         public List<UserAccount> GetAllUsers()
         {
+
             var table = db.Table<UserAccount>();
 
             return table.ToList();
         }
 
-        public void RemoveNote(UserAccount note)
+        public void RemoveUser(UserAccount user)
         {
-            db.Delete<UserAccount>(note.Id);
+            db.Delete<UserAccount>(user.Id);
         }
 
         public void CreateTableWithData()
@@ -62,6 +79,7 @@ namespace DiscordBot_BlueBot
                 newUser.DiscordId = 189139492488085504;
                 newUser.Username = "TestName";
                 newUser.JoinDate = DateTime.Now.ToLocalTime();
+                newUser.IsMember = 1;
                 db.Insert(newUser);
             }
         }

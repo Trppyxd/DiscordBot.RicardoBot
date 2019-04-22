@@ -22,6 +22,7 @@ namespace DiscordBot.BlueBot
         private CommandService _service;
         public static bool antiRaidToggle;
         public static bool optionalBan;
+        public DBase db = new DBase();
 
         //private int guildCount = 0;
 
@@ -42,21 +43,31 @@ namespace DiscordBot.BlueBot
             _client.MessageReceived += HandleCommandAsync;
             _client.ReactionAdded += HandleReaction;
             _client.UserJoined += HandleUserJoin;
+            _client.UserLeft += HandleUserLeft;
             _client.Ready += AddUsersToDb;
+        }
+
+        private async Task HandleUserLeft(SocketGuildUser user)
+        {
+            var dbUserIds = db.GetAllUsers().Select(x => Convert.ToUInt64(x.DiscordId)); // TODO remove database call on every user leave event.
+            if (dbUserIds.Contains(user.Id))
+            {
+                db.EditUser(user.Id, Constants.UserAccount.IsMember, "0");
+            }
         }
 
         private async Task AddUsersToDb()
         {
             if (string.IsNullOrEmpty(Config.bot.guildId))
             {
-            Console.WriteLine($"[ERROR] Config.bot.guildId is null or empty.");
+            Console.WriteLine($"[ERROR] Config.bot.guildId is null or empty. Couldn't add users to database.");
             return;
             }
 
             var guild = _client.GetGuild(Convert.ToUInt64(Config.bot.guildId));
             var gUsers = guild.Users;
 
-            var db = new DBase();
+            
             db.CreateUserTable();
             var dbUserIds = db.GetAllUsers().Select(x => Convert.ToUInt64(x.DiscordId));
             var userIdsNotInDb = gUsers.Select(x => x.Id).Where(x => !dbUserIds.Contains(x));
@@ -71,6 +82,7 @@ namespace DiscordBot.BlueBot
                 newUser.DiscordId = (long)gUser.Id;
                 newUser.Username = gUser.Username;
                 if (gUser.JoinedAt != null) newUser.JoinDate = (DateTimeOffset)gUser.JoinedAt;
+                newUser.IsMember = 1;
 
                 db.AddUser(newUser);
             }
@@ -116,7 +128,7 @@ namespace DiscordBot.BlueBot
 
         private async Task HandleHeartbeat(int arg1, int arg2)
         {
-            Console.WriteLine($"optionalBan = {optionalBan}; antiRaidToggle = {antiRaidToggle}"); // TODO remove Debug line
+            Console.WriteLine($"[DEBUG]optionalBan = {optionalBan}; antiRaidToggle = {antiRaidToggle}"); // TODO remove Debug line
             await _client.SetGameAsync($"Running on {_client.Guilds.Count} guilds.");
             if (_client.Guilds.Count == 0) await _client.SetGameAsync("Waiting for heartbeat..."); // prereq. Must be in atleast 1 guild
         }
