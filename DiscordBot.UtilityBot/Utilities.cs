@@ -65,9 +65,15 @@ namespace DiscordBot.BlueBot
                         Console.WriteLine("[DB]" + message);
                         break;
                     }
+                case LogType.DATABASE_ERROR:
+                {
+                    Console.ForegroundColor = ConsoleColor.DarkRed;
+                    Console.WriteLine("[DB-ERROR]" + message);
+                    break;
+                    }
                 default:
                     Console.ForegroundColor = ConsoleColor.White;
-                    Console.WriteLine(message);
+                    Console.WriteLine("[DEFAULT_LOGTYPE]" + message);
                     break;
             }
         }
@@ -77,7 +83,8 @@ namespace DiscordBot.BlueBot
             DEBUG = 0,
             ERROR = 1,
             WARNING = 2,
-            DATABASE = 3
+            DATABASE = 3,
+            DATABASE_ERROR = 4
         }
 
         /// <summary>

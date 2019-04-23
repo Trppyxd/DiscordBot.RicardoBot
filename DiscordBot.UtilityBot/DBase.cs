@@ -53,7 +53,7 @@ namespace DiscordBot_BlueBot
             {
                 Utilities.LogConsole(Utilities.LogType.DATABASE, $"Edit Successful > User {discordId}, property {dbProperty}, new value {value}");
             }
-            else { Utilities.LogConsole(Utilities.LogType.ERROR, $"Couldn't change property > User {discordId}, property {dbProperty}, new value {value}"); }
+            else { Utilities.LogConsole(Utilities.LogType.DATABASE_ERROR, $"Couldn't change property > User {discordId}, property {dbProperty}, new value {value}"); }
         }
         
         
