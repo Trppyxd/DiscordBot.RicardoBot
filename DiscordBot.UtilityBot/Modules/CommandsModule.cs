@@ -60,11 +60,11 @@ namespace DiscordBot.BlueBot.Modules
                 int result = cmd.ExecuteNonQuery();
                 if (result == 1)
                 {
-                    Console.WriteLine($"[DB] Edit Successful > User {discordId}, property {dbProperty}, new value {value}");
+                    Utilities.LogConsole(Utilities.LogType.DATABASE, $"Edit Successful > User {discordId}, property {dbProperty}, new value {value}");
                     await Context.Channel.SendMessageAsync(
                         $"Edit Successful > User <@{discordId}>, property {dbProperty}, new value {value}");
                 }
-                else { Console.WriteLine($"[DB-ERROR] Couldn't change property > User {discordId}, property {dbProperty}, new value {value}"); }
+                else { Utilities.LogConsole(Utilities.LogType.ERROR, $"Couldn't change property > User {discordId}, property {dbProperty}, new value {value}"); }
 
             }
         }
@@ -294,7 +294,7 @@ namespace DiscordBot.BlueBot.Modules
             }
             catch (Exception)
             {
-                Console.WriteLine("[ERROR] More than one channel contains the name of Config.bot.botCommandChannel");
+                Utilities.LogConsole(Utilities.LogType.ERROR, "More than one channel contains the name of Config.bot.botCommandChannel");
             }
         }
 

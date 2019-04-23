@@ -33,7 +33,7 @@ namespace DiscordBot.BlueBot
             {
                 CaseSensitiveCommands = false
             });
-        
+
             await _service.AddModulesAsync(Assembly.GetEntryAssembly(), null);
 
 
@@ -60,14 +60,14 @@ namespace DiscordBot.BlueBot
         {
             if (string.IsNullOrEmpty(Config.bot.guildId))
             {
-            Console.WriteLine($"[ERROR] Config.bot.guildId is null or empty. Couldn't add users to database.");
-            return;
+                Utilities.LogConsole(Utilities.LogType.ERROR, "Config.bot.guildId is null or empty. Couldn't add users to database.");
+                return;
             }
 
             var guild = _client.GetGuild(Convert.ToUInt64(Config.bot.guildId));
             var gUsers = guild.Users;
 
-            
+
             db.CreateUserTable();
             var dbUserIds = db.GetAllUsers().Select(x => Convert.ToUInt64(x.DiscordId));
             var userIdsNotInDb = gUsers.Select(x => x.Id).Where(x => !dbUserIds.Contains(x));
@@ -95,7 +95,7 @@ namespace DiscordBot.BlueBot
                 await user.BanAsync();
                 return;
             }
-            if(antiRaidToggle)
+            if (antiRaidToggle)
             {
                 await user.KickAsync();
                 return;
@@ -113,7 +113,7 @@ namespace DiscordBot.BlueBot
 
             db.AddUser(newUser);
         }
-    
+
         //private async Task _client_GuildUnavailable(SocketGuild arg)
         //{
         //}
@@ -135,7 +135,7 @@ namespace DiscordBot.BlueBot
 
         private async Task HandleReaction(Cacheable<IUserMessage, ulong> arg1, ISocketMessageChannel channel, SocketReaction reaction)
         {
-            
+
         }
 
         private async Task HandleCommandAsync(SocketMessage s)
@@ -152,7 +152,7 @@ namespace DiscordBot.BlueBot
                 {
                     Console.WriteLine(result.ErrorReason);
                 }
-            }          
+            }
         }
     }
 }

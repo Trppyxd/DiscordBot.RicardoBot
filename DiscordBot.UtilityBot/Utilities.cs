@@ -37,6 +37,49 @@ namespace DiscordBot.BlueBot
             return true;
         }
 
+        public static void LogConsole(LogType type, string message)
+        {
+            switch (type)
+            {
+                case LogType.DEBUG:
+                    {
+                        Console.ForegroundColor = ConsoleColor.White;
+                        Console.WriteLine("[LOG]" + message);
+                        break;
+                    }
+                case LogType.ERROR:
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine("[ERROR]" + message);
+                        break;
+                    }
+                case LogType.WARNING:
+                    {
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine("[WARNING]" + message);
+                        break;
+                    }
+                case LogType.DATABASE:
+                    {
+                        Console.ForegroundColor = ConsoleColor.DarkCyan;
+                        Console.WriteLine("[DB]" + message);
+                        break;
+                    }
+                default:
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.WriteLine(message);
+                    break;
+            }
+        }
+
+        public enum LogType
+        {
+            DEBUG = 0,
+            ERROR = 1,
+            WARNING = 2,
+            DATABASE = 3
+        }
+
         /// <summary>
         /// Trims characters from the start and the end of the id.
         /// </summary>

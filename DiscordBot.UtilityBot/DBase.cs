@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DiscordBot.BlueBot;
 using DiscordBot.BlueBot.Core;
 
 namespace DiscordBot_BlueBot
@@ -28,12 +29,13 @@ namespace DiscordBot_BlueBot
         public void CreateUserTable()
         {
             db.CreateTable<UserAccount>();
+            
         }
 
         public void AddUser(UserAccount user)
         {
             db.Insert(user);
-            Console.WriteLine($"[DB] {DateTime.Now.ToLocalTime():dd/MM/yy hh:mm:ss} > Added user {user.DiscordId} - \"{user.Username}\" to the database.");
+            Utilities.LogConsole(Utilities.LogType.DATABASE, $"{DateTime.Now.ToLocalTime():dd/MM/yy hh:mm:ss} > Added user {user.DiscordId} - \"{user.Username}\" to the database.");
         }
 
         public void UpdateUser(UserAccount user)
@@ -49,9 +51,9 @@ namespace DiscordBot_BlueBot
             int result = cmd.ExecuteNonQuery();
             if (result == 1)
             {
-                Console.WriteLine($"[DB] Edit Successful > User {discordId}, property {dbProperty}, new value {value}");
+                Utilities.LogConsole(Utilities.LogType.DATABASE, $"Edit Successful > User {discordId}, property {dbProperty}, new value {value}");
             }
-            else { Console.WriteLine($"[DB-ERROR] Couldn't change property > User {discordId}, property {dbProperty}, new value {value}"); }
+            else { Utilities.LogConsole(Utilities.LogType.ERROR, $"Couldn't change property > User {discordId}, property {dbProperty}, new value {value}"); }
         }
         
         

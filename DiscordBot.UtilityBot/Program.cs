@@ -21,7 +21,7 @@ namespace DiscordBot.BlueBot
         {
             if (string.IsNullOrEmpty(Config.bot.token))
             {
-                Console.WriteLine("Token is not set.");
+                Utilities.LogConsole(Utilities.LogType.ERROR, "Token not set.");
                 Console.ReadLine();
                 return;
             }
@@ -43,7 +43,7 @@ namespace DiscordBot.BlueBot
 
         private async Task Log(LogMessage msg)
         {
-            Console.WriteLine($"[LOG]{DateTime.Now.ToLocalTime():dd/MM/yy hh:mm:ss} > {msg.Message}");
+            Utilities.LogConsole(Utilities.LogType.DEBUG, $"{DateTime.Now.ToLocalTime():dd/MM/yy hh:mm:ss} > {msg.Message}");
         }
     }
 }
