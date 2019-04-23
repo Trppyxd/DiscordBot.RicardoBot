@@ -123,7 +123,7 @@ namespace DiscordBot.BlueBot.Modules
             if (amount > 100) amount = 100;
 
             string channelId = "";
-            channelId = Utilities.CleanId(channelName);
+            channelId = Utilities.CleanId(channelName)[0];
             var channel = Context.Client.GetChannel(UInt64.Parse(channelId));
             if (channel == null) return;
 
@@ -182,7 +182,7 @@ namespace DiscordBot.BlueBot.Modules
             if (string.IsNullOrWhiteSpace(user)) return;
 
             var channel = Context.Message.Channel as SocketTextChannel;
-            ulong userId = UInt64.Parse(Utilities.CleanId(user));
+            ulong userId = UInt64.Parse(Utilities.CleanId(user)[0]);
 
             if (amount > 100) amount = 100;
             if (amount != 100) amount += 1; // To add the current command to the delete list.
@@ -240,7 +240,7 @@ namespace DiscordBot.BlueBot.Modules
             if (amount > 100) amount = 100;
 
             if (user == null) return;
-            user = Utilities.CleanId(user);
+            user = Utilities.CleanId(user)[0];
 
             var dmChannel = await Context.Client.GetUser(UInt64.Parse(user)).GetOrCreateDMChannelAsync();
             var messages = await dmChannel.GetMessagesAsync(amount).FlattenAsync();
@@ -269,17 +269,25 @@ namespace DiscordBot.BlueBot.Modules
             await Context.Message.Channel.SendMessageAsync("", false, embed.Build());
         }
 
+        public List<ulong> ReturnIdListFromMentionString(string mentionString)
+        {
+            //Regex chars = new Regex("[<>@#!]");
+            var usersList = Utilities.CleanId(mentionString);
+            var userMentions = new List<ulong>();
+            foreach (var user in usersList)
+            {
+                userMentions.Add(Convert.ToUInt64(user));
+            }
+           
+            return userMentions;
+        }
+
         [RequireUserPermission(GuildPermission.Administrator)]
         [Command("kick")]
         public async Task KickUser([Remainder]string userMention)
         {
             if (string.IsNullOrEmpty(userMention)) return;
-
-            Regex chars = new Regex("[<>@#!]");
-            var usersList = Utilities.CleanId(userMention);
-            var userMentions = usersList.Split(' ');
-
-            var userIds = userMentions.Select(UInt64.Parse).ToList();
+            var userIds = ReturnIdListFromMentionString(userMention);
 
             //var userIdsList = userIds.ConvertAll(x => x.ToString());
             foreach (var id in userIds)
@@ -323,13 +331,28 @@ namespace DiscordBot.BlueBot.Modules
             }
         }
 
+        [RequireUserPermission(GuildPermission.Administrator)]
         [Command("createrollassignmentmessage"), Alias("cram")]
-        public async Task RollAssignmentMessage()
+        public async Task RollAssignmentMessage(string role, string title, [Remainder]string content)
         {
+            if (!Context.Guild.Roles.Any(x => x.Id == Convert.ToUInt64(Utilities.CleanId(role)[0])))
+            {
+                await Context.Channel.SendMessageAsync("No such roles in the guild.");
+                return;
+            }
 
+            EmbedBuilder builder = new EmbedBuilder()
+            {
+                Title = title,
+                Description = content,
+                Footer = new EmbedFooterBuilder
+                {
+                    Text = "Click ✅ to get the role, ❌ to remove it."
+                }
+            };
         }
 
-        public ulong lastPollId;
+        public ulong lastPollId; // unused
         [Command("poll")]
         public async Task StartPoll([Remainder] string PollMessage)
         {
@@ -367,7 +390,8 @@ namespace DiscordBot.BlueBot.Modules
         public async Task ConvertId(string Id)
         {
             string oldId = Id;
-            Id = Utilities.CleanId(Id);
+            Id = Utilities.CleanId(Id)[0];
+
             await Context.Channel.SendMessageAsync($"User: <@{Id}>\nBefore: \\{oldId}\nAfter: {Id}");
         }
     }

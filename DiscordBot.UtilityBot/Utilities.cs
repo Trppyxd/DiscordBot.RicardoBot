@@ -66,10 +66,10 @@ namespace DiscordBot.BlueBot
                         break;
                     }
                 case LogType.DATABASE_ERROR:
-                {
-                    Console.ForegroundColor = ConsoleColor.DarkRed;
-                    Console.WriteLine("[DB-ERROR]" + message);
-                    break;
+                    {
+                        Console.ForegroundColor = ConsoleColor.DarkRed;
+                        Console.WriteLine("[DB-ERROR]" + message);
+                        break;
                     }
                 default:
                     Console.ForegroundColor = ConsoleColor.White;
@@ -96,11 +96,13 @@ namespace DiscordBot.BlueBot
         /// </summary>
         /// <param name="id"></param>
         /// <returns>Trimmed id consisting only of numbers.</returns>
-        public static string CleanId(string id)
+        public static string[] CleanId(string id)
         {
             Regex regex = new Regex(@"\d+");
-            var result = regex.Matches(id).Cast<Match>().Select(x => x.Value).ToArray();
-            return String.Join(" ", result);
+            var result = regex.Matches(id).Cast<Match>().Select(x => x.Value).ToArray(); // Might not work
+
+            return result;
+            //return String.Join(" ", result);
         }
     }
 }
