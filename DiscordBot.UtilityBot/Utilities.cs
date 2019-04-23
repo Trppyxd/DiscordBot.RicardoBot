@@ -76,6 +76,7 @@ namespace DiscordBot.BlueBot
                     Console.WriteLine("[DEFAULT_LOGTYPE]" + message);
                     break;
             }
+            Console.ResetColor();
         }
 
         public enum LogType
