@@ -79,6 +79,9 @@ namespace DiscordBot.BlueBot
             Console.ResetColor();
         }
 
+        /// <summary>
+        /// Used for <see cref="Utilities.LogConsole"/>
+        /// </summary>
         public enum LogType
         {
             DEBUG = 0,

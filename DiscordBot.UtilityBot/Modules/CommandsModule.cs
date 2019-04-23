@@ -302,15 +302,17 @@ namespace DiscordBot.BlueBot.Modules
         {
             if (!user.Guild.Roles.Any()) return false;
             string targetRoleName = role.ToLower();
-            var result = (user.Guild.Roles).Where(x => x.Name.ToLower() == targetRoleName).Select(x => x.Id);
-            //var result = from r in user.Guild.Roles
-            //    where r.Name.ToLower() == targetRoleName
-            //    select r.Id;
-            if (!result.Any()) return false;
-            ulong roleID = result.FirstOrDefault();
-            if (roleID == 0) return false; // ?
-            var targetRole = user.Guild.GetRole(roleID);
-            return user.Roles.Contains(targetRole);
+            try
+            {
+                var result = (user.Guild.Roles).First(x => x.Name.ToLower() == targetRoleName).Id;
+
+                var targetRole = user.Guild.GetRole(result);
+                return user.Roles.Contains(targetRole);
+            }
+            catch 
+            {
+                return false;
+            }
         }
 
         public async Task RemoveMessageIfNotInBotChannel()
@@ -321,6 +323,13 @@ namespace DiscordBot.BlueBot.Modules
             }
         }
 
+        [Command("createrollassignmentmessage"), Alias("cram")]
+        public async Task RollAssignmentMessage()
+        {
+
+        }
+
+        public ulong lastPollId;
         [Command("poll")]
         public async Task StartPoll([Remainder] string PollMessage)
         {
