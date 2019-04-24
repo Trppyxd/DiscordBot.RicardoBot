@@ -13,6 +13,8 @@ namespace DiscordBot.BlueBot
             public const string DiscordId = "DiscordId";
             public const string Username = "Username";
             public const string IsMember = "IsMember";
+            public const string JoinDate = "JoinDate";
+            public const string LeaveDate = "LeaveDate";
         }
     }
 }
