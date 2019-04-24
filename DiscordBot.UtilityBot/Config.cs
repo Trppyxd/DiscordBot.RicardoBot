@@ -33,13 +33,19 @@ namespace DiscordBot.BlueBot
                 bot = JsonConvert.DeserializeObject<BotConfig>(json);
             }
         }
+
+        public static void Save()
+        {
+            string json = JsonConvert.SerializeObject(bot, Formatting.Indented);
+            File.WriteAllText(configFolder + "/" + configFile, json);
+        }
     }
 
     public struct BotConfig
     {
         public string token;
         public string cmdPrefix;
-        public ulong botChannel;
+        public ulong botChannelId;
         public ulong logChannelId;
         public ulong guildId;
         public ulong ownerId;
