@@ -49,6 +49,7 @@ namespace DiscordBot_BlueBot
             cmd.CommandText = $@"Update UserAccount Set {dbProperty} = {value} Where DiscordId = {discordId}";
 
             int result = cmd.ExecuteNonQuery();
+            // If succeeded
             if (result == 1)
             {
                 Utilities.LogConsole(Utilities.LogType.DATABASE, $"Edit Successful > User {discordId}, property {dbProperty}, new value {value}");
@@ -92,16 +93,15 @@ namespace DiscordBot_BlueBot
             return ids;
         }
 
-        public void CreateTableWithData()
+        public void CreateNewUser(long discId, string username, DateTimeOffset joinDate, int isMember)
         {
-            db.CreateTable<UserAccount>();
             if (!db.Table<UserAccount>().Any())
             {
                 var newUser = new UserAccount();
-                newUser.DiscordId = 189139492488085504;
-                newUser.Username = "TestName";
-                newUser.JoinDate = DateTime.Now.ToLocalTime();
-                newUser.IsMember = 1;
+                newUser.DiscordId = discId;
+                newUser.Username = username;
+                newUser.JoinDate = joinDate;
+                newUser.IsMember = isMember;
                 db.Insert(newUser);
             }
         }
