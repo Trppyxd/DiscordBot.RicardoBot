@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Entity.SqlServer;
 using SQLite;
 using System.Diagnostics;
 using System.IO;
@@ -12,10 +13,13 @@ using DiscordBot.BlueBot.Core;
 
 namespace DiscordBot_BlueBot
 {
+    /// <summary>
+    /// MUST be initialized to work with any data.
+    /// </summary>
     public class DBase
     {
         private SQLiteConnection db;
-        public static string dbPath = $@"{AppDomain.CurrentDomain.BaseDirectory}Core\UserAccounts\UserDB.db";
+        public static string dbPath = $@"{AppDomain.CurrentDomain.BaseDirectory}Core\UserAccounts\UserDB-{Config.bot.guildId}.db";
 
         public DBase()
         {
@@ -35,7 +39,8 @@ namespace DiscordBot_BlueBot
         public void AddUser(UserAccount user)
         {
             db.Insert(user);
-            Utilities.LogConsole(Utilities.LogType.DATABASE, $"{DateTime.Now.ToLocalTime():dd/MM/yy hh:mm:ss} > Added user {user.DiscordId} - \"{user.Username}\" to the database.");
+            Utilities.LogConsole(Utilities.LogType.DATABASE, 
+                $"{DateTime.Now.ToLocalTime():dd/MM/yy hh:mm:ss} > Added user {user.DiscordId} - \"{user.Username}\" to the database.");
         }
 
         public void UpdateUser(UserAccount user)
@@ -52,9 +57,11 @@ namespace DiscordBot_BlueBot
             // If succeeded
             if (result == 1)
             {
-                Utilities.LogConsole(Utilities.LogType.DATABASE, $"Edit Successful > User {discordId}, property {dbProperty}, new value {value}");
+                Utilities.LogConsole(Utilities.LogType.DATABASE, 
+                    $"Edit Successful > User {GetUserByDiscordId(discordId)} - {discordId}, property {dbProperty}, new value {value}");
             }
-            else { Utilities.LogConsole(Utilities.LogType.DATABASE_ERROR, $"Couldn't change property > User {discordId}, property {dbProperty}, new value {value}"); }
+            else { Utilities.LogConsole(Utilities.LogType.DATABASE_ERROR, 
+                $"Couldn't change property > User {GetUserByDiscordId(discordId)} - {discordId}, property {dbProperty}, new value {value}"); }
         }
         
         
@@ -72,14 +79,16 @@ namespace DiscordBot_BlueBot
             db.Delete<UserAccount>(user.Id);
         }
 
-        public void RemoveUserByDiscordId(long discordId)
+        public void RemoveUserByDiscordId(ulong discordId)
         {
             db.Delete<UserAccount>(GetUserByDiscordId(discordId).DiscordId);
         }
 
-        public UserAccount GetUserByDiscordId(long discordId)
+        public UserAccount GetUserByDiscordId(ulong discordId)
         {
-            return db.Table<UserAccount>().First(x => x.DiscordId == discordId);
+            var dId = Convert.ToInt64(discordId);
+            var table = db.Table<UserAccount>().ToList(); // IMPORTANT to convert the enumerable to list first filter(lambda) data, was a real pain
+            return table.First(x => x.DiscordId == dId);
         }
 
         public List<ulong> GetUserIds()
@@ -93,12 +102,12 @@ namespace DiscordBot_BlueBot
             return ids;
         }
 
-        public void CreateNewUser(long discId, string username, DateTimeOffset joinDate, int isMember)
+        public void CreateNewUser(ulong discId, string username, DateTimeOffset joinDate, int isMember)
         {
             if (!db.Table<UserAccount>().Any())
             {
                 var newUser = new UserAccount();
-                newUser.DiscordId = discId;
+                newUser.DiscordId = Convert.ToInt64(discId);
                 newUser.Username = username;
                 newUser.JoinDate = joinDate;
                 newUser.IsMember = isMember;
