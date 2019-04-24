@@ -39,9 +39,9 @@ namespace DiscordBot.BlueBot
     {
         public string token;
         public string cmdPrefix;
-        public string botCommandChannel;
-        public string logChannel;
-        public string guildId;
-        public string ownerId;
+        public ulong botChannel;
+        public ulong logChannelId;
+        public ulong guildId;
+        public ulong ownerId;
     }
 }

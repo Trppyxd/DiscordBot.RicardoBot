@@ -49,16 +49,29 @@ namespace DiscordBot.BlueBot
 
         private async Task HandleUserLeft(SocketGuildUser user)
         {
+            if (!String.IsNullOrWhiteSpace(Config.bot.logChannelId.ToString()))
+            {
+                var channel = user.Guild.GetChannel(Config.bot.logChannelId) as SocketTextChannel;
+                if (channel == null) // Check if safe cast worked
+                {
+                    Utilities.LogConsole(Utilities.LogType.ERROR, "LogChannel ID was not valid.");
+                }
+                else
+                {
+                    channel.SendMessageAsync($"User {user.Mention} left the guild at {DateTimeOffset.Now}")
+                }
+            }
             var dbUserIds = db.GetAllUsers().Select(x => Convert.ToUInt64(x.DiscordId)); // TODO remove database call on every user leave event.
             if (dbUserIds.Contains(user.Id))
             {
                 db.EditUser(user.Id, Constants.UserAccount.IsMember, "0");
+                db.EditUser(user.Id, Constants.UserAccount.LeaveDate, $"{DateTimeOffset.Now}");
             }
         }
 
         private async Task AddUsersToDb()
         {
-            if (string.IsNullOrEmpty(Config.bot.guildId))
+            if (String.IsNullOrWhiteSpace(Config.bot.guildId.ToString()))
             {
                 Utilities.LogConsole(Utilities.LogType.ERROR, "Config.bot.guildId is null or empty. Couldn't add users to database.");
                 return;
@@ -128,7 +141,8 @@ namespace DiscordBot.BlueBot
 
         private async Task HandleHeartbeat(int arg1, int arg2)
         {
-            //Console.WriteLine($"[DEBUG]optionalBan = {optionalBan}; antiRaidToggle = {antiRaidToggle}"); // TODO remove Debug line
+            //Console.WriteLine($"[DEBUG]optionalBan = {optionalBan}; antiRaidToggle = {antiRaidToggle}");
+            // TODO Find a different way than subscribing to the heartbeat event to refresh activity type
             await _client.SetGameAsync($"Running on {_client.Guilds.Count} guilds.");
             if (_client.Guilds.Count == 0) await _client.SetGameAsync("Waiting for heartbeat..."); // prereq. Must be in atleast 1 guild
         }
@@ -140,17 +154,18 @@ namespace DiscordBot.BlueBot
 
         private async Task HandleCommandAsync(SocketMessage s)
         {
-            var msg = s as SocketUserMessage;
-            if (msg == null) return;
+            if (!(s is SocketUserMessage msg)) return;
+            if (msg.Author.IsBot) return;
+            
             var context = new SocketCommandContext(_client, msg);
             int argPos = 0;
             if (msg.HasStringPrefix(Config.bot.cmdPrefix, ref argPos)
-                || msg.HasMentionPrefix(_client.GetUser(535740106187735050), ref argPos))
+                || msg.HasMentionPrefix(_client.GetUser(535740106187735050), ref argPos)) // Bot discord id is hardcoded
             {
                 var result = await _service.ExecuteAsync(context, argPos, null);
                 if (!result.IsSuccess && result.Error != CommandError.UnknownCommand)
                 {
-                    Console.WriteLine(result.ErrorReason);
+                    Utilities.LogConsole(Utilities.LogType.ERROR, result.ErrorReason);
                 }
             }
         }
