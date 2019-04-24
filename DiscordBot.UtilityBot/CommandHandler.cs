@@ -49,7 +49,7 @@ namespace DiscordBot.BlueBot
 
         private async Task HandleUserLeft(SocketGuildUser user)
         {
-            if (!String.IsNullOrWhiteSpace(Config.bot.logChannelId.ToString()))
+            if (Config.bot.logChannelId == 0)
             {
                 var channel = user.Guild.GetChannel(Config.bot.logChannelId) as SocketTextChannel;
                 if (channel == null) // Check if safe cast worked
@@ -58,7 +58,7 @@ namespace DiscordBot.BlueBot
                 }
                 else
                 {
-                    channel.SendMessageAsync($"User {user.Mention} left the guild at {DateTimeOffset.Now}")
+                    await channel.SendMessageAsync($"User {user.Mention} left the guild at {DateTimeOffset.Now}");
                 }
             }
             var dbUserIds = db.GetAllUsers().Select(x => Convert.ToUInt64(x.DiscordId)); // TODO remove database call on every user leave event.
@@ -71,13 +71,13 @@ namespace DiscordBot.BlueBot
 
         private async Task AddUsersToDb()
         {
-            if (String.IsNullOrWhiteSpace(Config.bot.guildId.ToString()))
+            if (Config.bot.guildId == 0)
             {
                 Utilities.LogConsole(Utilities.LogType.ERROR, "Config.bot.guildId is null or empty. Couldn't add users to database.");
                 return;
             }
 
-            var guild = _client.GetGuild(Convert.ToUInt64(Config.bot.guildId));
+            var guild = _client.GetGuild(Config.bot.guildId);
             var gUsers = guild.Users;
 
 
@@ -93,7 +93,7 @@ namespace DiscordBot.BlueBot
             {
                 gUser = guild.GetUser(userId);
                 newUser.DiscordId = (long)gUser.Id;
-                newUser.Username = gUser.Username;
+                newUser.Username = gUser.ToString();
                 if (gUser.JoinedAt != null) newUser.JoinDate = (DateTimeOffset)gUser.JoinedAt;
                 newUser.IsMember = 1;
 
@@ -121,7 +121,7 @@ namespace DiscordBot.BlueBot
             var newUser = new UserAccount();
 
             newUser.DiscordId = (long)user.Id;
-            newUser.Username = user.Username;
+            newUser.Username = user.ToString();
             if (user.JoinedAt != null) newUser.JoinDate = (DateTimeOffset)user.JoinedAt;
 
             db.AddUser(newUser);
