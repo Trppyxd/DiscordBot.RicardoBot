@@ -96,13 +96,20 @@ namespace DiscordBot.BlueBot
         /// </summary>
         /// <param name="id"></param>
         /// <returns>Trimmed id consisting only of numbers.</returns>
-        public static string[] CleanId(string id)
+        public static ulong[] CleanId(string id)
         {
             Regex regex = new Regex(@"\d+");
-            var result = regex.Matches(id).Cast<Match>().Select(x => x.Value).ToArray(); // Might not work
+            var matches = regex.Matches(id).Cast<Match>();
+            ulong[] idArray = new ulong[matches.Count()];
 
-            return result;
-            //return String.Join(" ", result);
+            int i = 0;
+            foreach (var match in matches)
+            {
+                idArray[i] = Convert.ToUInt64(match.Value);
+                i++;
+            }
+
+            return idArray;
         }
     }
 }
