@@ -71,6 +71,27 @@ namespace DiscordBot_BlueBot
             db.Delete<UserAccount>(user.Id);
         }
 
+        public void RemoveUserByDiscordId(long discordId)
+        {
+            db.Delete<UserAccount>(GetUserByDiscordId(discordId).DiscordId);
+        }
+
+        public UserAccount GetUserByDiscordId(long discordId)
+        {
+            return db.Table<UserAccount>().First(x => x.DiscordId == discordId);
+        }
+
+        public List<ulong> GetUserIds()
+        {
+            List<ulong> ids = null;
+            foreach (var user in db.Table<UserAccount>())
+            {
+                ids.Add(Convert.ToUInt64(user.DiscordId));
+            }
+
+            return ids;
+        }
+
         public void CreateTableWithData()
         {
             db.CreateTable<UserAccount>();

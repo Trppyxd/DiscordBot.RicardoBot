@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Runtime.Remoting.Messaging;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Discord;
@@ -34,15 +35,43 @@ namespace DiscordBot.BlueBot.Modules
             await Context.Channel.SendMessageAsync("", false, embed.Build());
         }
 
+        private DBase db;
+        /// <summary>
+        /// <see cref="DBase" /> Must be initialized for this to work.
+        /// </summary>
+        public void UpdateDbData()
+        {
+            foreach (var user in db.GetAllUsers())
+            {
+                // If user is not in guild but in database
+                if (Context.Guild.GetUser(Convert.ToUInt64(user.DiscordId)) == null)
+                {
+                    if (user.IsMember == 1)
+                    {
+                        db.EditUser(Convert.ToUInt64(user.DiscordId), "IsMember", "0");
+                    }
+                }
+                else if (Context.Guild.GetUser(Convert.ToUInt64(user.DiscordId)) != null)
+                {
+                    if (user.IsMember == 0)
+                    {
+                        db.EditUser(Convert.ToUInt64(user.DiscordId), "IsMember", "1");
+                    }
+                }
+            }
+        }
+
         [Command("users")]
         public async Task UsersInDatabase()
         {
-            var db = new DBase();
+            db = new DBase();
+
+            UpdateDbData();
 
             string msg = "Users in database: " + Environment.NewLine;
             foreach (var user in db.GetAllUsers())
             {
-                msg += $"#{user.Id} [{user.JoinDate:dd/MM/yy hh:mm:ss}] - {user.DiscordId} - {user.Username}" + Environment.NewLine;
+                msg += $"#{user.Id} [{user.JoinDate:dd/MM/yy hh:mm:ss}] - {user.DiscordId} - {user.Username} [{user.IsMember}]" + Environment.NewLine;
             }
             await Context.Channel.SendMessageAsync(msg);
         }
@@ -52,9 +81,9 @@ namespace DiscordBot.BlueBot.Modules
         public async Task DatabaseEditUser(ulong discordId, string dbProperty, int value)
         {
 
-            using (SQLiteConnection db = new SQLiteConnection(DBase.dbPath))
+            using (SQLiteConnection dbCon = new SQLiteConnection(DBase.dbPath))
             {
-                SQLiteCommand cmd = new SQLiteCommand(db);
+                SQLiteCommand cmd = new SQLiteCommand(dbCon);
                 cmd.CommandText = $@"Update UserAccount Set {dbProperty} = {value} Where DiscordId = {discordId}";
 
                 int result = cmd.ExecuteNonQuery();
@@ -69,12 +98,12 @@ namespace DiscordBot.BlueBot.Modules
             }
         }
 
-        [Command("whoami")]
-        public async Task WhoAmI()
+        [Command("whois")]
+        public async Task WhoIs()
         {
             var user = Context.User;
             await Context.Channel.SendMessageAsync(
-                $"WhoAmI:\nName:{user.Username} - ID:{user.Id}\nCreated At:{user.CreatedAt}\nIs Bot:{user.IsBot}\n");
+                $"WhoIs:\nName:{user.Username} - ID:{user.Id}\nCreated At:{user.CreatedAt}\nIs Bot:{user.IsBot}");
 
         }
 
@@ -109,6 +138,8 @@ namespace DiscordBot.BlueBot.Modules
 
             await Context.Channel.SendMessageAsync("", false, embed.Build());
         }
+
+        #region Purge Command
 
         [RequireUserPermission(ChannelPermission.ManageMessages, ErrorMessage = "User doesn't have permission to manage messages.")]
         [RequireOwner]
@@ -199,6 +230,8 @@ namespace DiscordBot.BlueBot.Modules
             await channel.SendMessageAsync($"<@{Context.User.Id}> : Deleted {delCount} messages of user <@{userId}>.");
         }
 
+        #endregion
+
         public enum DeleteType
         {
             Self = 1,
@@ -278,7 +311,7 @@ namespace DiscordBot.BlueBot.Modules
             {
                 userMentions.Add(Convert.ToUInt64(user));
             }
-           
+
             return userMentions;
         }
 
@@ -317,7 +350,7 @@ namespace DiscordBot.BlueBot.Modules
                 var targetRole = user.Guild.GetRole(result);
                 return user.Roles.Contains(targetRole);
             }
-            catch 
+            catch
             {
                 return false;
             }
