@@ -23,6 +23,12 @@ namespace DiscordBot.BlueBot.Modules
 {
     public class CommandsModule : ModuleBase<SocketCommandContext>
     {
+        [Command("config")]
+        public async Task ConfigSet(string option, string value)
+        {
+            
+        }
+
         [Command("echo")]
         [Alias("say")]
         public async Task Echo([Remainder]string message)
@@ -51,6 +57,7 @@ namespace DiscordBot.BlueBot.Modules
                         db.EditUser(Convert.ToUInt64(user.DiscordId), "IsMember", "0");
                     }
                 }
+                // If user is in the guild
                 else if (Context.Guild.GetUser(Convert.ToUInt64(user.DiscordId)) != null)
                 {
                     if (user.IsMember == 0)
@@ -330,12 +337,12 @@ namespace DiscordBot.BlueBot.Modules
 
             try
             {
-                var outputChannel = Context.Guild.Channels.Single(x => x.Name.Contains(Config.bot.logChannel)) as SocketTextChannel;
+                var outputChannel = Context.Guild.GetChannel(Config.bot.logChannelId) as SocketTextChannel;
                 await outputChannel.SendMessageAsync($"[KICK]User(s): \"{userMention}\" have been kicked from the server.");
             }
             catch (Exception)
             {
-                Utilities.LogConsole(Utilities.LogType.ERROR, "More than one channel contains the name of Config.bot.botCommandChannel");
+                Utilities.LogConsole(Utilities.LogType.ERROR, "Failed to kick user/s.");
             }
         }
 
@@ -358,7 +365,7 @@ namespace DiscordBot.BlueBot.Modules
 
         public async Task RemoveMessageIfNotInBotChannel()
         {
-            if (Context.Channel.Name.Contains(Config.bot.botCommandChannel) == false)
+            if (Context.Channel.Id != Config.bot.botChannel)
             {
                 await Context.Channel.DeleteMessageAsync(Context.Message.Id);
             }

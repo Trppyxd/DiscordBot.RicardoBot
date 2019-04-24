@@ -19,6 +19,8 @@ namespace DiscordBot.BlueBot.Core
         public DateTimeOffset JoinDate { get; set; }
         [MaxLength(1)]
         public int IsMember { get; set; }
+        [MaxLength(255)]
+        public DateTimeOffset LeaveDate { get; set; }
     }
 
     public class MessageInfo
