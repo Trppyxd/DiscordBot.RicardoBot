@@ -70,6 +70,18 @@ namespace DiscordBot.BlueBot
                         Console.ForegroundColor = ConsoleColor.DarkRed;
                         Console.WriteLine("[DB-ERROR]" + message);
                         break;
+                    }                    
+                case LogType.USER_LEFT:
+                    {
+                        Console.ForegroundColor = ConsoleColor.Cyan;
+                        Console.WriteLine("[LEFT]" + message);
+                        break;
+                    }
+                case LogType.USER_JOINED:
+                    {
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine("[JOINED]" + message);
+                        break;
                     }
                 default:
                     Console.ForegroundColor = ConsoleColor.White;
@@ -88,7 +100,9 @@ namespace DiscordBot.BlueBot
             ERROR = 1,
             WARNING = 2,
             DATABASE = 3,
-            DATABASE_ERROR = 4
+            DATABASE_ERROR = 4,
+            USER_JOINED = 5,
+            USER_LEFT = 6
         }
 
         /// <summary>

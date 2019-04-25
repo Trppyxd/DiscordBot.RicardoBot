@@ -467,7 +467,7 @@ namespace DiscordBot.BlueBot.Modules
         [Command("whois")]
         public async Task WhoIs(string dUser)
         {
-            db = new DBase();
+            db = new DBase(Context.Guild);
 
             var user = Context.Guild.GetUser(Convert.ToUInt64(Utilities.CleanId(dUser)[0]));
             var joinedAt = db.GetUserByDiscordId(user.Id).JoinDate;
@@ -558,7 +558,7 @@ namespace DiscordBot.BlueBot.Modules
         [Command("users")]
         public async Task dbGetUsers()
         {
-            db = new DBase();
+            db = new DBase(Context.Guild);
 
             dbUpdateData();
 

@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using Discord;
+using Discord.Net;
 using Discord.WebSocket;
 
 namespace DiscordBot.BlueBot
@@ -19,12 +21,16 @@ namespace DiscordBot.BlueBot
 
         public async Task StartAsync()
         {
-            if (string.IsNullOrEmpty(Config.bot.token))
+            while (string.IsNullOrEmpty(Config.bot.token))
             {
-                Utilities.LogConsole(Utilities.LogType.ERROR, "Token not set.");
-                Console.ReadLine();
-                return;
+                Utilities.LogConsole(Utilities.LogType.ERROR, "Token not set.\nEnter Token here:");
+                string token = Console.ReadLine();
+                Console.Clear();
+                Config.bot.token = token;
+                if (String.IsNullOrWhiteSpace(token))
+                    return;
             }
+
             _client = new DiscordSocketClient(new DiscordSocketConfig
             {
                 LogLevel = LogSeverity.Debug,
@@ -33,8 +39,21 @@ namespace DiscordBot.BlueBot
             });
             _client.Log += Log;
 
-            await _client.LoginAsync(TokenType.Bot, Config.bot.token);
+            try
+            {
+                await _client.LoginAsync(TokenType.Bot, Config.bot.token);
+            }
+            catch (HttpException e)
+            {
+                if (e.HttpCode == HttpStatusCode.Unauthorized)
+                {
+                    Config.bot.token = "";
+                    Config.Save();
+                }
+                return;
+            }
             await _client.StartAsync();
+            Config.Save();
 
             _handler = new CommandHandler();
             await _handler.InitializeAsync(_client);

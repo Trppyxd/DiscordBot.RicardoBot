@@ -6,8 +6,10 @@ using SQLite;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.Remoting.Contexts;
 using System.Text;
 using System.Threading.Tasks;
+using Discord.WebSocket;
 using DiscordBot.BlueBot;
 using DiscordBot.BlueBot.Core;
 
@@ -19,13 +21,16 @@ namespace DiscordBot_BlueBot
     public class DBase
     {
         private SQLiteConnection db;
-        public static string dbPath = $@"{AppDomain.CurrentDomain.BaseDirectory}Core\UserAccounts\UserDB-{Config.bot.guildId}.db";
+        public static string dbPath;
 
-        public DBase()
+        public DBase(SocketGuild guild)
         {
+            dbPath = $@"{AppDomain.CurrentDomain.BaseDirectory}Core\UserAccounts\{guild.Name}\UserDB-{guild.Id}.db";
             //var dbPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "UserDB.db");
             if (!Directory.Exists($@"{AppDomain.CurrentDomain.BaseDirectory}Core\UserAccounts"))
                 Directory.CreateDirectory($@"{AppDomain.CurrentDomain.BaseDirectory}Core\UserAccounts");
+            if (!Directory.Exists($@"{AppDomain.CurrentDomain.BaseDirectory}Core\UserAccounts\{guild.Name}"))
+                Directory.CreateDirectory($@"{AppDomain.CurrentDomain.BaseDirectory}Core\UserAccounts\{guild.Name}");
 
             db = new SQLiteConnection(dbPath);
         }
@@ -39,8 +44,10 @@ namespace DiscordBot_BlueBot
         public void AddUser(UserAccount user)
         {
             db.Insert(user);
+            var guildIdLength = db.DatabasePath.Split('\\').Length;
+            var guildIdLength2 = db.DatabasePath.Split('\\').Length - 1;
             Utilities.LogConsole(Utilities.LogType.DATABASE, 
-                $"{DateTime.Now.ToLocalTime():dd/MM/yy hh:mm:ss} > Added user {user.DiscordId} - \"{user.Username}\" to the database.");
+                $"{DateTime.Now.ToLocalTime():dd/MM/yy hh:mm:ss} > Added user {user.DiscordId} - \"{user.Username}\" to {db.DatabasePath.Split('\\')[guildIdLength]} in {db.DatabasePath.Split('\\')[guildIdLength2]}.");
         }
 
         public void UpdateUser(UserAccount user)

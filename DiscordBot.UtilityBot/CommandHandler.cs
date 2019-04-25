@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data.Entity.Core.Mapping;
 using System.Linq;
 using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using Discord;
@@ -22,7 +23,6 @@ namespace DiscordBot.BlueBot
         private CommandService _service;
         public static bool antiRaidToggle;
         public static bool optionalBan;
-        public DBase db = new DBase();
 
         //private int guildCount = 0;
 
@@ -49,17 +49,22 @@ namespace DiscordBot.BlueBot
 
         private async Task HandleUserLeft(SocketGuildUser user)
         {
-            if (Config.bot.logChannelId == 0)
+            DBase db = new DBase(user.Guild);
+            var channel = user.Guild.Channels.First(x => x.Name.ToLower().Contains("logs")) as SocketTextChannel;
+            if (channel == null)
             {
-                var channel = user.Guild.GetChannel(Config.bot.logChannelId) as SocketTextChannel;
-                if (channel == null) // Check if safe cast worked
-                {
-                    Utilities.LogConsole(Utilities.LogType.ERROR, "LogChannel ID was not valid.");
-                }
-                else
-                {
-                    await channel.SendMessageAsync($"User {user.Mention} left the guild at {DateTimeOffset.Now}");
-                }
+                Utilities.LogConsole(Utilities.LogType.ERROR,
+                    "LogChannel ID was not valid.");
+                Utilities.LogConsole(Utilities.LogType.USER_LEFT,
+                    $"User {user} has left {user.Guild}");
+            }
+            else
+            {
+                Utilities.LogConsole(Utilities.LogType.USER_LEFT,
+                    $"User {user} has left {user.Guild}");
+
+                await channel.SendMessageAsync(
+                    $"User {user.Mention} left the guild at {DateTimeOffset.Now}");
             }
             var dbUserIds = db.GetAllUsers().Select(x => Convert.ToUInt64(x.DiscordId)); // TODO remove database call on every user leave event.
             if (dbUserIds.Contains(user.Id))
@@ -71,33 +76,29 @@ namespace DiscordBot.BlueBot
 
         private async Task AddUsersToDb()
         {
-            if (Config.bot.guildId == 0)
+            foreach (var g in _client.Guilds)
             {
-                Utilities.LogConsole(Utilities.LogType.ERROR, "Config.bot.guildId is null or empty. Couldn't add users to database.");
-                return;
-            }
+                DBase db = new DBase(g);
+                var gUsers = g.Users;
 
-            var guild = _client.GetGuild(Config.bot.guildId);
-            var gUsers = guild.Users;
+                db.CreateUserTable();
+                var dbUserIds = db.GetAllUsers().Select(x => Convert.ToUInt64(x.DiscordId));
+                var userIdsNotInDb = gUsers.Select(x => x.Id).Where(x => !dbUserIds.Contains(x));
+                //if (userIdsNotInDb.Any()) return;
 
+                var newUser = new UserAccount();
 
-            db.CreateUserTable();
-            var dbUserIds = db.GetAllUsers().Select(x => Convert.ToUInt64(x.DiscordId));
-            var userIdsNotInDb = gUsers.Select(x => x.Id).Where(x => !dbUserIds.Contains(x));
-            //if (userIdsNotInDb.Any()) return;
+                foreach (var userId in userIdsNotInDb)
+                {
+                    var gUser = g.GetUser(userId);
+                    newUser.DiscordId = (long) gUser.Id;
+                    newUser.Username = gUser.ToString();
+                    if (gUser.JoinedAt != null) newUser.JoinDate = (DateTimeOffset) gUser.JoinedAt;
+                    newUser.IsMember = 1;
+                    // TODO Add check if user rejoins the server again and already has a previous leave date(override it or make a collection of leavedates).
 
-            var newUser = new UserAccount();
-
-            SocketGuildUser gUser = null;
-            foreach (var userId in userIdsNotInDb)
-            {
-                gUser = guild.GetUser(userId);
-                newUser.DiscordId = (long)gUser.Id;
-                newUser.Username = gUser.ToString();
-                if (gUser.JoinedAt != null) newUser.JoinDate = (DateTimeOffset)gUser.JoinedAt;
-                newUser.IsMember = 1;
-
-                db.AddUser(newUser);
+                    db.AddUser(newUser);
+                }
             }
         }
 
@@ -115,7 +116,7 @@ namespace DiscordBot.BlueBot
             }
 
 
-            var db = new DBase();
+            var db = new DBase(user.Guild);
             db.CreateUserTable();
 
             var newUser = new UserAccount();
@@ -143,7 +144,8 @@ namespace DiscordBot.BlueBot
         {
             //Console.WriteLine($"[DEBUG]optionalBan = {optionalBan}; antiRaidToggle = {antiRaidToggle}");
             // TODO Find a different way than subscribing to the heartbeat event to refresh activity type
-            await _client.SetGameAsync($"Running on {_client.Guilds.Count} guilds.");
+            await _client.SetGameAsync(
+                $"Running on {_client.Guilds.Count} guilds.");
             if (_client.Guilds.Count == 0) await _client.SetGameAsync("Waiting for heartbeat..."); // prereq. Must be in atleast 1 guild
         }
 
@@ -156,7 +158,7 @@ namespace DiscordBot.BlueBot
         {
             if (!(s is SocketUserMessage msg)) return;
             if (msg.Author.IsBot) return;
-            
+
             var context = new SocketCommandContext(_client, msg);
             int argPos = 0;
             if (msg.HasStringPrefix(Config.bot.cmdPrefix, ref argPos)
