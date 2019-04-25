@@ -25,12 +25,14 @@ namespace DiscordBot_BlueBot
 
         public DBase(SocketGuild guild)
         {
-            dbPath = $@"{AppDomain.CurrentDomain.BaseDirectory}Core\UserAccounts\{guild.Name}\UserDB-{guild.Id}.db";
+            dbPath = $@"{AppDomain.CurrentDomain.BaseDirectory}Core\UserAccounts\{guild.Id}\UserDB-{guild.Id}.db";
             //var dbPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "UserDB.db");
             if (!Directory.Exists($@"{AppDomain.CurrentDomain.BaseDirectory}Core\UserAccounts"))
+            {
                 Directory.CreateDirectory($@"{AppDomain.CurrentDomain.BaseDirectory}Core\UserAccounts");
-            if (!Directory.Exists($@"{AppDomain.CurrentDomain.BaseDirectory}Core\UserAccounts\{guild.Name}"))
-                Directory.CreateDirectory($@"{AppDomain.CurrentDomain.BaseDirectory}Core\UserAccounts\{guild.Name}");
+            }
+            if (!Directory.Exists($@"{AppDomain.CurrentDomain.BaseDirectory}Core\UserAccounts\{guild.Id}"))
+                Directory.CreateDirectory($@"{AppDomain.CurrentDomain.BaseDirectory}Core\UserAccounts\{guild.Id}");
 
             db = new SQLiteConnection(dbPath);
         }
@@ -38,16 +40,15 @@ namespace DiscordBot_BlueBot
         public void CreateUserTable()
         {
             db.CreateTable<UserAccount>();
-            
         }
 
         public void AddUser(UserAccount user)
         {
             db.Insert(user);
-            var guildIdLength = db.DatabasePath.Split('\\').Length;
-            var guildIdLength2 = db.DatabasePath.Split('\\').Length - 1;
+            var databaseIndex = db.DatabasePath.Split('\\').Length - 1;
+            var databaseFolderIndex = databaseIndex - 1;
             Utilities.LogConsole(Utilities.LogType.DATABASE, 
-                $"{DateTime.Now.ToLocalTime():dd/MM/yy hh:mm:ss} > Added user {user.DiscordId} - \"{user.Username}\" to {db.DatabasePath.Split('\\')[guildIdLength]} in {db.DatabasePath.Split('\\')[guildIdLength2]}.");
+                $"{DateTime.Now.ToLocalTime():dd/MM/yy hh:mm:ss} > Added ID: {user.DiscordId} DB: {db.DatabasePath.Split('\\')[databaseFolderIndex]} | Name: {user.Username}");
         }
 
         public void UpdateUser(UserAccount user)
@@ -68,14 +69,13 @@ namespace DiscordBot_BlueBot
                     $"Edit Successful > User {GetUserByDiscordId(discordId)} - {discordId}, property {dbProperty}, new value {value}");
             }
             else { Utilities.LogConsole(Utilities.LogType.DATABASE_ERROR, 
-                $"Couldn't change property > User {GetUserByDiscordId(discordId)} - {discordId}, property {dbProperty}, new value {value}"); }
+                $"Couldn't change property > User {GetUserByDiscordId(discordId).Username} - {discordId}, property {dbProperty}, new value {value}"); }
         }
         
         
 
         public List<UserAccount> GetAllUsers()
         {
-
             var table = db.Table<UserAccount>();
 
             return table.ToList();
@@ -95,7 +95,8 @@ namespace DiscordBot_BlueBot
         {
             var dId = Convert.ToInt64(discordId);
             var table = db.Table<UserAccount>().ToList(); // IMPORTANT to convert the enumerable to list first filter(lambda) data, was a real pain
-            return table.First(x => x.DiscordId == dId);
+            var result = table.First(x => x.DiscordId == dId);
+            return result;
         }
 
         public List<ulong> GetUserIds()

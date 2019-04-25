@@ -62,7 +62,8 @@ namespace DiscordBot.BlueBot
 
         private async Task Log(LogMessage msg)
         {
-            Utilities.LogConsole(Utilities.LogType.DEBUG, $"{DateTime.Now.ToLocalTime():dd/MM/yy hh:mm:ss} > {msg.Message}");
+            Utilities.LogConsole(Utilities.LogType.DEBUG, 
+                $"{DateTime.Now.ToLocalTime():dd/MM/yy hh:mm:ss} > {msg.Message}");
         }
     }
 }

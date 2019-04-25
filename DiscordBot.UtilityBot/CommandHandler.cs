@@ -1,5 +1,6 @@
 ﻿using System;
 using System.CodeDom;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data.Entity.Core.Mapping;
 using System.Linq;
@@ -55,17 +56,15 @@ namespace DiscordBot.BlueBot
             {
                 Utilities.LogConsole(Utilities.LogType.ERROR,
                     "LogChannel ID was not valid.");
-                Utilities.LogConsole(Utilities.LogType.USER_LEFT,
-                    $"User {user} has left {user.Guild}");
             }
             else
             {
-                Utilities.LogConsole(Utilities.LogType.USER_LEFT,
-                    $"User {user} has left {user.Guild}");
-
                 await channel.SendMessageAsync(
                     $"User {user.Mention} left the guild at {DateTimeOffset.Now}");
             }
+            Utilities.LogConsole(Utilities.LogType.USER_LEFT,
+                $"User {user} has left {user.Guild}");
+
             var dbUserIds = db.GetAllUsers().Select(x => Convert.ToUInt64(x.DiscordId)); // TODO remove database call on every user leave event.
             if (dbUserIds.Contains(user.Id))
             {
@@ -80,20 +79,27 @@ namespace DiscordBot.BlueBot
             {
                 DBase db = new DBase(g);
                 var gUsers = g.Users;
-
+                if (gUsers.Count == 0)
+                    return;
+                
                 db.CreateUserTable();
-                var dbUserIds = db.GetAllUsers().Select(x => Convert.ToUInt64(x.DiscordId));
-                var userIdsNotInDb = gUsers.Select(x => x.Id).Where(x => !dbUserIds.Contains(x));
-                //if (userIdsNotInDb.Any()) return;
+                var dbUsers = db.GetAllUsers();
+                var dbUserIds = dbUsers.Select(x => Convert.ToUInt64(x.DiscordId)).ToList();
+                var userIdsNotInDb = gUsers.Select(x => x.Id).Where(x => !dbUserIds.Contains(x)).ToList();
+
+                if (!dbUserIds.Any())
+                    userIdsNotInDb = gUsers.Select(x => x.Id).ToList();
+                if (userIdsNotInDb.Count == 0)
+                    return;
 
                 var newUser = new UserAccount();
 
                 foreach (var userId in userIdsNotInDb)
                 {
                     var gUser = g.GetUser(userId);
-                    newUser.DiscordId = (long) gUser.Id;
+                    newUser.DiscordId = (long)gUser.Id;
                     newUser.Username = gUser.ToString();
-                    if (gUser.JoinedAt != null) newUser.JoinDate = (DateTimeOffset) gUser.JoinedAt;
+                    if (gUser.JoinedAt != null) newUser.JoinDate = (DateTimeOffset)gUser.JoinedAt;
                     newUser.IsMember = 1;
                     // TODO Add check if user rejoins the server again and already has a previous leave date(override it or make a collection of leavedates).
 
