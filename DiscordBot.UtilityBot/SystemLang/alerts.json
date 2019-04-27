@@ -1,5 +1,0 @@
-{
-    "TEST": "This is a sample text.",
-	"WELCOME_&NAME_&BOTNAME": "Hello, {0}! I'm {1}!",
-	"PRIVATE_MESSAGE":  "This is a private message!"
-}
