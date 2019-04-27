@@ -17,17 +17,7 @@ namespace DiscordBot.BlueBot
 {
     class Utilities
     {
-        // ReSharper disable once NotAccessedField.Local
-        private static Dictionary<string, string> alerts;
-
-        static Utilities()
-        {
-            string json = File.ReadAllText("SystemLang/alerts.json");
-            var data = JsonConvert.DeserializeObject<dynamic>(json);
-            alerts = data.ToObject<Dictionary<string, string>>();
-        }
-
-        public static bool ValidateFileExistance(string file)
+        public static bool ValidateTextFileExistance(string file)
         {
             if (!File.Exists(file))
             {
@@ -37,57 +27,90 @@ namespace DiscordBot.BlueBot
             return true;
         }
 
+        public static bool ValidateDirectoryExistance(string directoryPath)
+        {
+            List<string> dirlist = new List<string>(directoryPath.Split('\\'));
+            string path = "";
+
+            for (int i = 0; i < dirlist.Count; i++)
+            {
+                path += dirlist[i] + '\\';
+                if (!Directory.Exists(path))
+                    Directory.CreateDirectory(path);
+            }
+
+            return true;
+        }
+
+        public static void WriteToLog(string msg, bool sortByDay = true)
+        {
+            string path = "";
+            if (sortByDay == true)
+                path = $@"{AppDomain.CurrentDomain.BaseDirectory}Core\logs-{DateTime.UtcNow:dd-MM-yyyy}.txt";
+            else
+                path = $@"{AppDomain.CurrentDomain.BaseDirectory}Core\logs.txt";
+
+            ValidateTextFileExistance(path);
+            using (var sw = new StreamWriter(path, true))
+            {
+                sw.WriteLine(msg);
+            }
+        }
+
         public static void LogConsole(LogType type, string message)
         {
+            string resultString;
             switch (type)
             {
                 case LogType.DEBUG:
                     {
                         Console.ForegroundColor = ConsoleColor.White;
-                        Console.WriteLine("[LOG]" + message);
+                        resultString = $"[LOG]{DateTime.UtcNow:dd/MM/yy hh:mm:ss} > " + message;
                         break;
                     }
                 case LogType.ERROR:
                     {
                         Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine("[ERROR]" + message);
+                        resultString = $"[ERROR]{DateTime.UtcNow:dd/MM/yy hh:mm:ss} > " + message;
                         break;
                     }
                 case LogType.WARNING:
                     {
                         Console.ForegroundColor = ConsoleColor.Yellow;
-                        Console.WriteLine("[WARNING]" + message);
+                        resultString = $"[WARNING]{DateTime.UtcNow:dd/MM/yy hh:mm:ss} > " + message;
                         break;
                     }
                 case LogType.DATABASE:
                     {
                         Console.ForegroundColor = ConsoleColor.DarkCyan;
-                        Console.WriteLine("[DB]" + message);
+                        resultString = $"[DB]{DateTime.UtcNow:dd/MM/yy hh:mm:ss} > " + message;
                         break;
                     }
                 case LogType.DATABASE_ERROR:
                     {
                         Console.ForegroundColor = ConsoleColor.DarkRed;
-                        Console.WriteLine("[DB-ERROR]" + message);
+                        resultString = $"[DB-ERROR]{DateTime.UtcNow:dd/MM/yy hh:mm:ss} > " + message;
                         break;
-                    }                    
+                    }
                 case LogType.USER_LEFT:
                     {
                         Console.ForegroundColor = ConsoleColor.Cyan;
-                        Console.WriteLine("[LEFT]" + message);
+                        resultString = $"[LEFT]{DateTime.UtcNow:dd/MM/yy hh:mm:ss} > " + message;
                         break;
                     }
                 case LogType.USER_JOINED:
                     {
                         Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine("[JOINED]" + message);
+                        resultString = $"[JOINED]{DateTime.UtcNow:dd/MM/yy hh:mm:ss} > " + message;
                         break;
                     }
                 default:
                     Console.ForegroundColor = ConsoleColor.White;
-                    Console.WriteLine("[DEFAULT_LOGTYPE]" + message);
+                    resultString = $"[DEFAULT_LOGTYPE]{DateTime.UtcNow:dd/MM/yy hh:mm:ss K} > " + message;
                     break;
             }
+            Console.WriteLine(resultString);
+            Utilities.WriteToLog(resultString);
             Console.ResetColor();
         }
 

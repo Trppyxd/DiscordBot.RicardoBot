@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Data.Entity.Core.Mapping;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Remoting.Contexts;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
@@ -42,11 +43,14 @@ namespace DiscordBot.BlueBot
             //_client.GuildAvailable += _client_GuildAvailable;
             _client.LatencyUpdated += HandleHeartbeat;
             _client.MessageReceived += HandleCommandAsync;
-            _client.ReactionAdded += HandleReaction;
+            //_client.ReactionAdded += HandleReaction;
             _client.UserJoined += HandleUserJoin;
             _client.UserLeft += HandleUserLeft;
             _client.Ready += AddUsersToDb;
+            // TODO Add currentuser updated to change username in Database if an user changes his discord username
         }
+
+
 
         private async Task HandleUserLeft(SocketGuildUser user)
         {
@@ -60,16 +64,16 @@ namespace DiscordBot.BlueBot
             else
             {
                 await channel.SendMessageAsync(
-                    $"User {user.Mention} left the guild at {DateTimeOffset.Now}");
+                    $"User {user.ToString()} left the guild at {DateTimeOffset.UtcNow}.");
             }
             Utilities.LogConsole(Utilities.LogType.USER_LEFT,
-                $"User {user} has left {user.Guild}");
+                $"User {user.ToString()} has left {user.Guild}");
 
-            var dbUserIds = db.GetAllUsers().Select(x => Convert.ToUInt64(x.DiscordId)); // TODO remove database call on every user leave event.
+            var dbUserIds = db.GetAllUsers().Select(x => Convert.ToUInt64(x.DiscordId)); // TODO remove database call on every user leave event?
             if (dbUserIds.Contains(user.Id))
             {
                 db.EditUser(user.Id, Constants.UserAccount.IsMember, "0");
-                db.EditUser(user.Id, Constants.UserAccount.LeaveDate, $"{DateTimeOffset.Now}");
+                db.EditUser(user.Id, Constants.UserAccount.LeaveDate, $"{DateTimeOffset.UtcNow}");
             }
         }
 
@@ -103,7 +107,7 @@ namespace DiscordBot.BlueBot
                     newUser.IsMember = 1;
                     // TODO Add check if user rejoins the server again and already has a previous leave date(override it or make a collection of leavedates).
 
-                    db.AddUser(newUser);
+                    db.AddUser(newUser, g.GetUser(gUser.Id));
                 }
             }
         }
@@ -112,15 +116,14 @@ namespace DiscordBot.BlueBot
         {
             if (antiRaidToggle && optionalBan)
             {
-                await user.BanAsync();
+                await user.BanAsync(1, $"Banned at:{DateTime.UtcNow:dd/MM/yyyy hh/mm/ss} | Banned by: Automated | Reason: Anti-Raid Ban");
                 return;
             }
             if (antiRaidToggle)
             {
-                await user.KickAsync();
+                await user.KickAsync("Reason: Automated Anti-Raid Kick");
                 return;
             }
-
 
             var db = new DBase(user.Guild);
             db.CreateUserTable();
@@ -131,7 +134,7 @@ namespace DiscordBot.BlueBot
             newUser.Username = user.ToString();
             if (user.JoinedAt != null) newUser.JoinDate = (DateTimeOffset)user.JoinedAt;
 
-            db.AddUser(newUser);
+            db.AddUser(newUser, user);
         }
 
         //private async Task _client_GuildUnavailable(SocketGuild arg)
@@ -155,10 +158,10 @@ namespace DiscordBot.BlueBot
             if (_client.Guilds.Count == 0) await _client.SetGameAsync("Waiting for heartbeat..."); // prereq. Must be in atleast 1 guild
         }
 
-        private async Task HandleReaction(Cacheable<IUserMessage, ulong> arg1, ISocketMessageChannel channel, SocketReaction reaction)
-        {
+        //private async Task HandleReaction(Cacheable<IUserMessage, ulong> arg1, ISocketMessageChannel channel, SocketReaction reaction)
+        //{
 
-        }
+        //}
 
         private async Task HandleCommandAsync(SocketMessage s)
         {

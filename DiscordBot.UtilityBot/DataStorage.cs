@@ -27,7 +27,7 @@ namespace DiscordBot.BlueBot
         static DataStorage()
         {
             // Load data
-            if (!Utilities.ValidateFileExistance("DataStorage.json")) return;
+            if (!Utilities.ValidateTextFileExistance("DataStorage.json")) return;
             string json = File.ReadAllText("DataStorage.json");
             pairs = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
         }

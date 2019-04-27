@@ -14,6 +14,8 @@ namespace DiscordBot.BlueBot
     {
         private DiscordSocketClient _client;
         private CommandHandler _handler;
+        public static string BaseDir = AppDomain.CurrentDomain.BaseDirectory;
+
 
         static void Main(string[] args)
             => new Program().StartAsync().GetAwaiter().GetResult();
@@ -63,7 +65,7 @@ namespace DiscordBot.BlueBot
         private async Task Log(LogMessage msg)
         {
             Utilities.LogConsole(Utilities.LogType.DEBUG, 
-                $"{DateTime.Now.ToLocalTime():dd/MM/yy hh:mm:ss} > {msg.Message}");
+                msg.Message);
         }
     }
 }

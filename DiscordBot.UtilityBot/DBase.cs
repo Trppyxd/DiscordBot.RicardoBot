@@ -25,14 +25,9 @@ namespace DiscordBot_BlueBot
 
         public DBase(SocketGuild guild)
         {
-            dbPath = $@"{AppDomain.CurrentDomain.BaseDirectory}Core\UserAccounts\{guild.Id}\UserDB-{guild.Id}.db";
-            //var dbPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "UserDB.db");
-            if (!Directory.Exists($@"{AppDomain.CurrentDomain.BaseDirectory}Core\UserAccounts"))
-            {
-                Directory.CreateDirectory($@"{AppDomain.CurrentDomain.BaseDirectory}Core\UserAccounts");
-            }
-            if (!Directory.Exists($@"{AppDomain.CurrentDomain.BaseDirectory}Core\UserAccounts\{guild.Id}"))
-                Directory.CreateDirectory($@"{AppDomain.CurrentDomain.BaseDirectory}Core\UserAccounts\{guild.Id}");
+            Utilities.ValidateDirectoryExistance($@"{Program.BaseDir}Core\UserAccounts\{guild.Id}");
+
+            dbPath = $@"{Program.BaseDir}Core\UserAccounts\{guild.Id}\UserDB-{guild.Id}.db";
 
             db = new SQLiteConnection(dbPath);
         }
@@ -42,18 +37,20 @@ namespace DiscordBot_BlueBot
             db.CreateTable<UserAccount>();
         }
 
-        public void AddUser(UserAccount user)
+        public void AddUser(UserAccount user, SocketGuildUser gUser = null)
         {
             db.Insert(user);
             var databaseIndex = db.DatabasePath.Split('\\').Length - 1;
             var databaseFolderIndex = databaseIndex - 1;
-            Utilities.LogConsole(Utilities.LogType.DATABASE, 
-                $"{DateTime.Now.ToLocalTime():dd/MM/yy hh:mm:ss} > Added ID: {user.DiscordId} DB: {db.DatabasePath.Split('\\')[databaseFolderIndex]} | Name: {user.Username}");
-        }
+            if (gUser == null)
+            {
+                Utilities.LogConsole(Utilities.LogType.DATABASE,
+                    $"Added DB:{db.DatabasePath.Split('\\')[databaseFolderIndex]} | ID:{user.DiscordId} Name:{user.Username}");
+                return;
+            }
+            Utilities.LogConsole(Utilities.LogType.DATABASE,
+                $"Added DB:{db.DatabasePath.Split('\\')[databaseFolderIndex]} - \"{gUser.Guild.Name}\" | ID: {user.DiscordId} - Name: {user.Username}");
 
-        public void UpdateUser(UserAccount user)
-        {
-            db.Update(user);
         }
 
         public void EditUser(ulong discordId, string dbProperty, string value)
@@ -65,14 +62,15 @@ namespace DiscordBot_BlueBot
             // If succeeded
             if (result == 1)
             {
-                Utilities.LogConsole(Utilities.LogType.DATABASE, 
+                Utilities.LogConsole(Utilities.LogType.DATABASE,
                     $"Edit Successful > User {GetUserByDiscordId(discordId)} - {discordId}, property {dbProperty}, new value {value}");
             }
-            else { Utilities.LogConsole(Utilities.LogType.DATABASE_ERROR, 
-                $"Couldn't change property > User {GetUserByDiscordId(discordId).Username} - {discordId}, property {dbProperty}, new value {value}"); }
+            else
+            {
+                Utilities.LogConsole(Utilities.LogType.DATABASE_ERROR,
+             $"Couldn't change property > User {GetUserByDiscordId(discordId).Username} - {discordId}, property {dbProperty}, new value {value}");
+            }
         }
-        
-        
 
         public List<UserAccount> GetAllUsers()
         {

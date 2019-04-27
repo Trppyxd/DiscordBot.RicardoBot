@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.Entity.Core.Metadata.Edm;
+using System.Data.Entity.Migrations.Infrastructure;
 using System.Linq;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
@@ -179,7 +180,7 @@ namespace DiscordBot.BlueBot.Modules
             var channelInst = channel as SocketTextChannel;
             var messages = await channelInst.GetMessagesAsync(amount).FlattenAsync();
 
-            var delete = messages.Where(m => m.Timestamp.LocalDateTime > DateTime.Now.ToLocalTime().AddDays(-14));
+            var delete = messages.Where(m => m.Timestamp.UtcDateTime > DateTime.UtcNow.ToLocalTime().AddDays(-14));
 
             if (deleteType == DeleteType.Self) delete = delete.Where(m => m.Author.Id == Context.Message.Author.Id);
             else if (deleteType == DeleteType.Bot) delete = delete.Where(m => m.Author.IsBot);
@@ -207,7 +208,7 @@ namespace DiscordBot.BlueBot.Modules
 
             var messages = await channel.GetMessagesAsync(amount).FlattenAsync();
 
-            var delete = messages.Where(m => m.Timestamp.LocalDateTime > DateTime.Now.ToLocalTime().AddDays(-14));
+            var delete = messages.Where(m => m.Timestamp.UtcDateTime > DateTime.UtcNow.AddDays(-14));
 
             if (deleteType == DeleteType.Self) delete = delete.Where(m => m.Author.Id == Context.Message.Author.Id);
             else if (deleteType == DeleteType.Bot) delete = delete.Where(m => m.Author.IsBot);
@@ -238,9 +239,8 @@ namespace DiscordBot.BlueBot.Modules
 
             var messages = await channel.GetMessagesAsync(amount).FlattenAsync();
 
-            var delete = messages.Where(m => m.Timestamp.LocalDateTime > DateTime.Now.ToLocalTime().AddDays(-14));
+            var delete = messages.Where(m => m.Timestamp.UtcDateTime > DateTime.UtcNow.ToLocalTime().AddDays(-14));
             delete = delete.Where(m => m.Author.Id == userId);
-
 
             await channel.DeleteMessagesAsync(delete);
 
