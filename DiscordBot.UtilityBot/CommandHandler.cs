@@ -64,10 +64,10 @@ namespace DiscordBot.BlueBot
             else
             {
                 await channel.SendMessageAsync(
-                    $"User {user.ToString()} left the guild at {DateTimeOffset.UtcNow}.");
+                    $"User {user.Mention} - {user.ToString()} left the guild at {DateTimeOffset.UtcNow}.");
             }
             Utilities.LogConsole(Utilities.LogType.USER_LEFT,
-                $"User {user.ToString()} has left {user.Guild}");
+                $"User {user.ToString()} - {user.Id} has left {user.Guild}");
 
             var dbUserIds = db.GetAllUsers().Select(x => Convert.ToUInt64(x.DiscordId)); // TODO remove database call on every user leave event?
             if (dbUserIds.Contains(user.Id))

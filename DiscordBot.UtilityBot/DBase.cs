@@ -63,12 +63,12 @@ namespace DiscordBot_BlueBot
             if (result == 1)
             {
                 Utilities.LogConsole(Utilities.LogType.DATABASE,
-                    $"Edit Successful > User {GetUserByDiscordId(discordId)} - {discordId}, property {dbProperty}, new value {value}");
+                    $"Edit Successful > User {GetUserByDiscordId(discordId).ToString()} - {discordId}, property {dbProperty}, new value {value}");
             }
             else
             {
                 Utilities.LogConsole(Utilities.LogType.DATABASE_ERROR,
-             $"Couldn't change property > User {GetUserByDiscordId(discordId).Username} - {discordId}, property {dbProperty}, new value {value}");
+             $"Couldn't change property > User {GetUserByDiscordId(discordId).ToString()} - {discordId}, property {dbProperty}, target value {value}");
             }
         }
 
