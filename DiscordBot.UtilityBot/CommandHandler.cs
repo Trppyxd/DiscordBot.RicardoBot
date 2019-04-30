@@ -106,6 +106,7 @@ namespace DiscordBot.BlueBot
                 Utilities.WriteToLog(Utilities.LogFileType.MESSAGE_PUBLIC, logResult);
                 Console.WriteLine(logResult);
 
+                await channel.SendMessageAsync(embed: eb.Build());
                 if (arg.Attachments.Count > 0)
                 {
                     using (var http = new HttpClient())
