@@ -42,14 +42,75 @@ namespace DiscordBot.BlueBot
             return true;
         }
 
-        public static void WriteToLog(string msg, bool sortByDay = true)
+        public static void WriteToLog(LogFileType lfType, string msg, bool sortByDay = true)
         {
             string path = "";
-            if (sortByDay == true)
-                path = $@"{AppDomain.CurrentDomain.BaseDirectory}Core\logs-{DateTime.UtcNow:dd-MM-yyyy}.txt";
-            else
-                path = $@"{AppDomain.CurrentDomain.BaseDirectory}Core\logs.txt";
+            switch (lfType)
+            {
 
+                case LogFileType.ALL:
+                    path =
+                        sortByDay == true ?
+                            $@"{AppDomain.CurrentDomain.BaseDirectory}Core\CONSOLE_Logs-{DateTime.UtcNow:dd-MM-yyyy}UTC.txt" :
+                            $@"{AppDomain.CurrentDomain.BaseDirectory}Core\CONSOLE_Logs.txt";
+                    break;
+                case LogFileType.MESSAGE_PRIVATE:
+                    path =
+                        sortByDay == true ?
+                            $@"{AppDomain.CurrentDomain.BaseDirectory}Core\MESSAGE_PRIVATE_Logs-{DateTime.UtcNow:dd-MM-yyyy}UTC.txt" :
+                            $@"{AppDomain.CurrentDomain.BaseDirectory}Core\MESSAGE_PRIVATE_Logs.txt";
+                    break;
+                case LogFileType.MESSAGE_PUBLIC:
+                    path =
+                        sortByDay == true ?
+                            $@"{AppDomain.CurrentDomain.BaseDirectory}Core\MESSAGE_PUBLIC_Logs-{DateTime.UtcNow:dd-MM-yyyy}UTC.txt" :
+                            $@"{AppDomain.CurrentDomain.BaseDirectory}Core\MESSAGE_PUBLIC_Logs.txt";
+                    break;
+                case LogFileType.USER_JOIN:
+                    path =
+                        sortByDay == true ?
+                            $@"{AppDomain.CurrentDomain.BaseDirectory}Core\USER_JOIN_Logs-{DateTime.UtcNow:dd-MM-yyyy}UTC.txt" :
+                            $@"{AppDomain.CurrentDomain.BaseDirectory}Core\USER_JOIN_Logs.txt";
+                    break;
+                case LogFileType.USER_LEAVE:
+                    path =
+                        sortByDay == true ?
+                            $@"{AppDomain.CurrentDomain.BaseDirectory}Core\USER_LEAVE_Logs-{DateTime.UtcNow:dd-MM-yyyy}UTC.txt" :
+                            $@"{AppDomain.CurrentDomain.BaseDirectory}Core\USER_LEAVE_Logs.txt";
+                    break;
+                case LogFileType.USER_KICKED:
+                    path =
+                        sortByDay == true ?
+                            $@"{AppDomain.CurrentDomain.BaseDirectory}Core\USER_KICKED_Logs-{DateTime.UtcNow:dd-MM-yyyy}UTC.txt" :
+                            $@"{AppDomain.CurrentDomain.BaseDirectory}Core\USER_KICKED_Logs.txt";
+                    break;
+                case LogFileType.USER_BANNED:
+                    path =
+                        sortByDay == true ?
+                            $@"{AppDomain.CurrentDomain.BaseDirectory}Core\USER_BANNED_Logs-{DateTime.UtcNow:dd-MM-yyyy}UTC.txt" :
+                            $@"{AppDomain.CurrentDomain.BaseDirectory}Core\USER_BANNED_Logs.txt";
+                    break;
+                case LogFileType.DATABASE:
+                    path =
+                        sortByDay == true ?
+                            $@"{AppDomain.CurrentDomain.BaseDirectory}Core\DATABASE_Logs-{DateTime.UtcNow:dd-MM-yyyy}UTC.txt" :
+                            $@"{AppDomain.CurrentDomain.BaseDirectory}Core\DATABASE_Logs.txt";
+                    break;
+                case LogFileType.ERROR:
+                    path =
+                        sortByDay == true ?
+                            $@"{AppDomain.CurrentDomain.BaseDirectory}Core\ERROR_Logs-{DateTime.UtcNow:dd-MM-yyyy}UTC.txt" :
+                            $@"{AppDomain.CurrentDomain.BaseDirectory}Core\ERROR_Logs.txt";
+                    break;
+                default:
+                    path =
+                        sortByDay == true ?
+                            $@"{AppDomain.CurrentDomain.BaseDirectory}Core\LOGTYPEDEFAULT_Logs-{DateTime.UtcNow:dd-MM-yyyy}UTC.txt" :
+                            $@"{AppDomain.CurrentDomain.BaseDirectory}Core\LOGTYPEDEFAULT_Logs.txt";
+                    break;
+            }
+
+            ValidateDirectoryExistance($@"{AppDomain.CurrentDomain.BaseDirectory}Core\");
             ValidateTextFileExistance(path);
             using (var sw = new StreamWriter(path, true))
             {
@@ -57,67 +118,93 @@ namespace DiscordBot.BlueBot
             }
         }
 
-        public static void LogConsole(LogType type, string message)
+        public enum LogFileType
+        {
+            ALL = 0,
+            MESSAGE_PUBLIC = 1,
+            MESSAGE_PRIVATE = 2,
+            USER_LEAVE = 3,
+            USER_JOIN = 4,
+            USER_KICKED = 5,
+            USER_BANNED = 6,
+            DATABASE = 7,
+            ERROR = 8,
+        }
+
+        public static void LogConsole(LogFormat format, string message)
         {
             string resultString;
-            switch (type)
+            switch (format)
             {
-                case LogType.DEBUG:
+                case LogFormat.DEBUG:
                     {
                         Console.ForegroundColor = ConsoleColor.White;
-                        resultString = $"[LOG]{DateTime.UtcNow:dd/MM/yy hh:mm:ss} > " + message;
+                        resultString = $"[LOG]{DateTime.UtcNow:dd/MM/yy hh:mm:ss}UTC > " + message;
                         break;
                     }
-                case LogType.ERROR:
+                case LogFormat.NOFORMAT:
+                    {
+                        Console.ForegroundColor = ConsoleColor.White;
+                        resultString = "message";
+                        break;
+                    }
+                case LogFormat.ERROR:
                     {
                         Console.ForegroundColor = ConsoleColor.Red;
-                        resultString = $"[ERROR]{DateTime.UtcNow:dd/MM/yy hh:mm:ss} > " + message;
+                        resultString = $"[ERROR]{DateTime.UtcNow:dd/MM/yy hh:mm:ss}UTC > " + message;
+                        Utilities.WriteToLog(LogFileType.ERROR, resultString);
                         break;
                     }
-                case LogType.WARNING:
+                case LogFormat.WARNING:
                     {
                         Console.ForegroundColor = ConsoleColor.Yellow;
-                        resultString = $"[WARNING]{DateTime.UtcNow:dd/MM/yy hh:mm:ss} > " + message;
+                        resultString = $"[WARNING]{DateTime.UtcNow:dd/MM/yy hh:mm:ss}UTC > " + message;
+                        Utilities.WriteToLog(LogFileType.ERROR, resultString);
                         break;
                     }
-                case LogType.DATABASE:
+                case LogFormat.DATABASE:
                     {
                         Console.ForegroundColor = ConsoleColor.DarkCyan;
-                        resultString = $"[DB]{DateTime.UtcNow:dd/MM/yy hh:mm:ss} > " + message;
+                        resultString = $"[DB]{DateTime.UtcNow:dd/MM/yy hh:mm:ss}UTC > " + message;
+                        Utilities.WriteToLog(LogFileType.DATABASE, resultString);
                         break;
                     }
-                case LogType.DATABASE_ERROR:
+                case LogFormat.DATABASE_ERROR:
                     {
                         Console.ForegroundColor = ConsoleColor.DarkRed;
-                        resultString = $"[DB-ERROR]{DateTime.UtcNow:dd/MM/yy hh:mm:ss} > " + message;
+                        resultString = $"[DB-ERROR]{DateTime.UtcNow:dd/MM/yy hh:mm:ss}UTC > " + message;
+                        Utilities.WriteToLog(LogFileType.DATABASE, resultString);
+
                         break;
                     }
-                case LogType.USER_LEFT:
+                case LogFormat.USER_LEFT:
                     {
                         Console.ForegroundColor = ConsoleColor.Cyan;
-                        resultString = $"[LEFT]{DateTime.UtcNow:dd/MM/yy hh:mm:ss} > " + message;
+                        resultString = $"[LEFT]{DateTime.UtcNow:dd/MM/yy hh:mm:ss}UTC > " + message;
+                        Utilities.WriteToLog(LogFileType.USER_LEAVE, resultString);
                         break;
                     }
-                case LogType.USER_JOINED:
+                case LogFormat.USER_JOINED:
                     {
                         Console.ForegroundColor = ConsoleColor.Green;
-                        resultString = $"[JOINED]{DateTime.UtcNow:dd/MM/yy hh:mm:ss} > " + message;
+                        resultString = $"[JOINED]{DateTime.UtcNow:dd/MM/yy hh:mm:ss}UTC > " + message;
+                        Utilities.WriteToLog(LogFileType.USER_JOIN, resultString);
                         break;
                     }
                 default:
                     Console.ForegroundColor = ConsoleColor.White;
-                    resultString = $"[DEFAULT_LOGTYPE]{DateTime.UtcNow:dd/MM/yy hh:mm:ss K} > " + message;
+                    resultString = $"[DEFAULT_LOGTYPE]{DateTime.UtcNow:dd/MM/yy hh:mm:ss}UTC > " + message;
                     break;
             }
             Console.WriteLine(resultString);
-            Utilities.WriteToLog(resultString);
+            Utilities.WriteToLog(LogFileType.ALL, resultString);
             Console.ResetColor();
         }
 
         /// <summary>
         /// Used for <see cref="Utilities.LogConsole"/>
         /// </summary>
-        public enum LogType
+        public enum LogFormat
         {
             DEBUG = 0,
             ERROR = 1,
@@ -125,7 +212,8 @@ namespace DiscordBot.BlueBot
             DATABASE = 3,
             DATABASE_ERROR = 4,
             USER_JOINED = 5,
-            USER_LEFT = 6
+            USER_LEFT = 6,
+            NOFORMAT = 7
         }
 
         /// <summary>
