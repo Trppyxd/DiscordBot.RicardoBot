@@ -3,7 +3,10 @@ using System.CodeDom;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.Entity.Core.Mapping;
+using System.IO;
 using System.Linq;
+using System.Net.Cache;
+using System.Net.Http;
 using System.Reflection;
 using System.Runtime.Remoting.Contexts;
 using System.Security.Cryptography.X509Certificates;
@@ -28,6 +31,20 @@ namespace DiscordBot.BlueBot
 
         //private int guildCount = 0;
 
+        #region Helpers
+
+        private SocketTextChannel GetUserGuildTextChannelByName(SocketGuildUser user, string ChannelName)
+        {
+            return user.Guild.Channels.First(x => x.Name.ToLower().Contains(ChannelName)) as SocketTextChannel;
+        }
+
+        private SocketVoiceChannel GetUserGuildVoiceChannelByName(SocketGuildUser user, string ChannelName)
+        {
+            return user.Guild.Channels.First(x => x.Name.ToLower().Contains(ChannelName)) as SocketVoiceChannel;
+        }
+
+        #endregion
+
         public async Task InitializeAsync(DiscordSocketClient client)
         {
             _client = client;
@@ -43,6 +60,7 @@ namespace DiscordBot.BlueBot
             //_client.GuildAvailable += _client_GuildAvailable;
             _client.LatencyUpdated += HandleHeartbeat;
             _client.MessageReceived += HandleCommandAsync;
+            //_client.MessageReceived += HandleMessageReceived;
             //_client.ReactionAdded += HandleReaction;
             _client.UserJoined += HandleUserJoin;
             _client.UserLeft += HandleUserLeft;
@@ -50,15 +68,67 @@ namespace DiscordBot.BlueBot
             // TODO Add currentuser updated to change username in Database if an user changes his discord username
         }
 
-
-
-        private async Task HandleUserLeft(SocketGuildUser user)
+        private async Task HandleMessageReceived(SocketMessage arg)
         {
-            DBase db = new DBase(user.Guild);
-            var channel = user.Guild.Channels.First(x => x.Name.ToLower().Contains("logs")) as SocketTextChannel;
+            //var channel = GetUserGuildTextChannelByName(arg.Author as SocketGuildUser, "chat-logs");
+            if (!arg.Author.IsBot)
+            {
+                var originChannel = (SocketTextChannel)_client.GetChannel(arg.Channel.Id);
+
+                var channel = _client.GetGuild(524561374232313857).GetTextChannel(572775387369570306);
+                var logResult =
+                    $"[MSG]{arg.CreatedAt.UtcDateTime:dd/MM/yy hh:mm:ss}UTC - {arg.Author.ToString()}|{arg.Author.Id} [{originChannel.Guild.Name}|{originChannel.Guild.Id}] ({arg.Channel.Name}|{arg.Channel.Id})\n" +
+                    $"--------START-------\n" +
+                    $"{arg.Content}\n" +
+                    $"---------END--------";
+                if (arg.Attachments.Count > 0)
+                    logResult += $"\nAttachments: {arg.Attachments.Count}";
+
+                //var guild = ((SocketTextChannel)_client.GetChannel(arg.Channel.Id)).Guild;
+                var eb = new EmbedBuilder()
+                {
+                    Color = Color.Red,
+                    Title = $"Chatlog from {originChannel.Guild.Name} | {originChannel.Guild.Id}",
+
+                    Author = new EmbedAuthorBuilder()
+                    {
+                        IconUrl = arg.Author.GetAvatarUrl(),
+                        Name = $"{arg.Author.ToString()} | {arg.Author.Id}"
+                    },
+                    Description = arg.Content,
+
+                    Footer = new EmbedFooterBuilder()
+                    {
+                        Text =
+                            $"{arg.Channel.Name} | {arg.Channel.Id} - {arg.CreatedAt.UtcDateTime:dd/MM/yy  hh:mm:ss} UTC"
+                    }
+                };
+                Utilities.WriteToLog(Utilities.LogFileType.MESSAGE_PUBLIC, logResult);
+                Console.WriteLine(logResult);
+
+                if (arg.Attachments.Count > 0)
+                {
+                    using (var http = new HttpClient())
+                    {
+                        foreach (var item in arg.Attachments)
+                        {
+                            var extension = item.Filename.Split('.')[1];
+                            var memStream = await http.GetStreamAsync(item.Url);
+
+                            await channel.SendFileAsync(memStream, item.Filename,
+                                $"**Attachment Format: __{extension}__ Size: __{(item.Size / 1000):n0}KB__**");
+                        }
+                    }
+                }
+            }
+        }
+
+        private async Task LogUserLeft(SocketGuildUser user)
+        {
+            var channel = GetUserGuildTextChannelByName(user, "logs");
             if (channel == null)
             {
-                Utilities.LogConsole(Utilities.LogType.ERROR,
+                Utilities.LogConsole(Utilities.LogFormat.ERROR,
                     "LogChannel ID was not valid.");
             }
             else
@@ -66,8 +136,15 @@ namespace DiscordBot.BlueBot
                 await channel.SendMessageAsync(
                     $"User {user.Mention} - {user.ToString()} left the guild at {DateTimeOffset.UtcNow}.");
             }
-            Utilities.LogConsole(Utilities.LogType.USER_LEFT,
+            Utilities.LogConsole(Utilities.LogFormat.USER_LEFT,
                 $"User {user.ToString()} - {user.Id} has left {user.Guild}");
+            Utilities.WriteToLog(Utilities.LogFileType.USER_LEAVE,
+                $"User {user.Mention} - {user.ToString()} left the guild at {DateTimeOffset.UtcNow}.");
+        }
+
+        private async Task DbUserOnLeaveEdit(SocketGuildUser user)
+        {
+            DBase db = new DBase(user.Guild);
 
             var dbUserIds = db.GetAllUsers().Select(x => Convert.ToUInt64(x.DiscordId)); // TODO remove database call on every user leave event?
             if (dbUserIds.Contains(user.Id))
@@ -75,6 +152,12 @@ namespace DiscordBot.BlueBot
                 db.EditUser(user.Id, Constants.UserAccount.IsMember, "0");
                 db.EditUser(user.Id, Constants.UserAccount.LeaveDate, $"{DateTimeOffset.UtcNow}");
             }
+        }
+
+        private async Task HandleUserLeft(SocketGuildUser user)
+        {
+            await LogUserLeft(user);
+            await DbUserOnLeaveEdit(user);
         }
 
         private async Task AddUsersToDb()
@@ -85,7 +168,7 @@ namespace DiscordBot.BlueBot
                 var gUsers = g.Users;
                 if (gUsers.Count == 0)
                     return;
-                
+
                 db.CreateUserTable();
                 var dbUsers = db.GetAllUsers();
                 var dbUserIds = dbUsers.Select(x => Convert.ToUInt64(x.DiscordId)).ToList();
@@ -165,6 +248,7 @@ namespace DiscordBot.BlueBot
 
         private async Task HandleCommandAsync(SocketMessage s)
         {
+            await HandleMessageReceived(s);
             if (!(s is SocketUserMessage msg)) return;
             if (msg.Author.IsBot) return;
 
@@ -176,7 +260,7 @@ namespace DiscordBot.BlueBot
                 var result = await _service.ExecuteAsync(context, argPos, null);
                 if (!result.IsSuccess && result.Error != CommandError.UnknownCommand)
                 {
-                    Utilities.LogConsole(Utilities.LogType.ERROR, result.ErrorReason);
+                    Utilities.LogConsole(Utilities.LogFormat.ERROR, result.ErrorReason);
                 }
             }
         }
