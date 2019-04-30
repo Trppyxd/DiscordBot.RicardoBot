@@ -44,11 +44,11 @@ namespace DiscordBot_BlueBot
             var databaseFolderIndex = databaseIndex - 1;
             if (gUser == null)
             {
-                Utilities.LogConsole(Utilities.LogType.DATABASE,
+                Utilities.LogConsole(Utilities.LogFormat.DATABASE,
                     $"Added DB:{db.DatabasePath.Split('\\')[databaseFolderIndex]} | ID:{user.DiscordId} Name:{user.Username}");
                 return;
             }
-            Utilities.LogConsole(Utilities.LogType.DATABASE,
+            Utilities.LogConsole(Utilities.LogFormat.DATABASE,
                 $"Added DB:{db.DatabasePath.Split('\\')[databaseFolderIndex]} - \"{gUser.Guild.Name}\" | ID: {user.DiscordId} - Name: {user.Username}");
 
         }
@@ -62,13 +62,13 @@ namespace DiscordBot_BlueBot
             // If succeeded
             if (result == 1)
             {
-                Utilities.LogConsole(Utilities.LogType.DATABASE,
-                    $"Edit Successful > User {GetUserByDiscordId(discordId).ToString()} - {discordId}, property {dbProperty}, new value {value}");
+                Utilities.LogConsole(Utilities.LogFormat.DATABASE,
+                    $"Edit Successful > User {GetDBUserByDiscordId(discordId).Username} - {discordId}, property {dbProperty}, new value {value}");
             }
             else
             {
-                Utilities.LogConsole(Utilities.LogType.DATABASE_ERROR,
-             $"Couldn't change property > User {GetUserByDiscordId(discordId).ToString()} - {discordId}, property {dbProperty}, target value {value}");
+                Utilities.LogConsole(Utilities.LogFormat.DATABASE_ERROR,
+             $"Couldn't change property > User {GetDBUserByDiscordId(discordId).Username} - {discordId}, property {dbProperty}, target value {value}");
             }
         }
 
@@ -86,10 +86,10 @@ namespace DiscordBot_BlueBot
 
         public void RemoveUserByDiscordId(ulong discordId)
         {
-            db.Delete<UserAccount>(GetUserByDiscordId(discordId).DiscordId);
+            db.Delete<UserAccount>(GetDBUserByDiscordId(discordId).DiscordId);
         }
 
-        public UserAccount GetUserByDiscordId(ulong discordId)
+        public UserAccount GetDBUserByDiscordId(ulong discordId)
         {
             var dId = Convert.ToInt64(discordId);
             var table = db.Table<UserAccount>().ToList(); // IMPORTANT to convert the enumerable to list first filter(lambda) data, was a real pain

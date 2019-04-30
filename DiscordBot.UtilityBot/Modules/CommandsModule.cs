@@ -272,7 +272,7 @@ namespace DiscordBot.BlueBot.Modules
             }
             catch (Exception)
             {
-                Utilities.LogConsole(Utilities.LogType.ERROR, "Failed to kick user/s.");
+                Utilities.LogConsole(Utilities.LogFormat.ERROR, "Failed to kick user/s.");
             }
         }
 
@@ -470,7 +470,7 @@ namespace DiscordBot.BlueBot.Modules
             db = new DBase(Context.Guild);
 
             var user = Context.Guild.GetUser(Convert.ToUInt64(Utilities.CleanId(dUser)[0]));
-            var joinedAt = db.GetUserByDiscordId(user.Id).JoinDate;
+            var joinedAt = db.GetDBUserByDiscordId(user.Id).JoinDate;
             await Context.Channel.SendMessageAsync(
                 $"WhoIs:\nName:{user.Username} - ID:{user.Id}\nJoined at:{joinedAt:dd/MM/yy hh:mm:ss}\nCreated At:{user.CreatedAt}\nIs Bot:{user.IsBot}");
         }
@@ -587,11 +587,11 @@ namespace DiscordBot.BlueBot.Modules
                 int result = cmd.ExecuteNonQuery();
                 if (result == 1)
                 {
-                    Utilities.LogConsole(Utilities.LogType.DATABASE, $"Edit Successful > User {discordId}, property {dbProperty}, new value {value}");
+                    Utilities.LogConsole(Utilities.LogFormat.DATABASE, $"Edit Successful > User {discordId}, property {dbProperty}, new value {value}");
                     await Context.Channel.SendMessageAsync(
                         $"Edit Successful > User <@{discordId}>, property {dbProperty}, new value {value}");
                 }
-                else { Utilities.LogConsole(Utilities.LogType.ERROR, $"Couldn't change property > User {discordId}, property {dbProperty}, new value {value}"); }
+                else { Utilities.LogConsole(Utilities.LogFormat.ERROR, $"Couldn't change property > User {discordId}, property {dbProperty}, new value {value}"); }
 
             }
         }

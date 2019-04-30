@@ -25,7 +25,7 @@ namespace DiscordBot.BlueBot
         {
             while (string.IsNullOrEmpty(Config.bot.token))
             {
-                Utilities.LogConsole(Utilities.LogType.ERROR, "Token not set.\nEnter Token here:");
+                Utilities.LogConsole(Utilities.LogFormat.ERROR, "Token not set.\nEnter Token here:");
                 string token = Console.ReadLine();
                 Console.Clear();
                 Config.bot.token = token;
@@ -64,7 +64,7 @@ namespace DiscordBot.BlueBot
 
         private async Task Log(LogMessage msg)
         {
-            Utilities.LogConsole(Utilities.LogType.DEBUG, 
+            Utilities.LogConsole(Utilities.LogFormat.DEBUG, 
                 msg.Message);
         }
     }
