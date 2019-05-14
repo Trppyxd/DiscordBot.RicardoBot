@@ -280,28 +280,51 @@ namespace DiscordBot.BlueBot.Modules
 
         #region Kick Recently Joined Command
 
-        public async Task KickUserLast(int time, char timeFormat)
+        [RequireUserPermission(GuildPermission.KickMembers)]
+        [RequireBotPermission(GuildPermission.KickMembers)]
+        [Command("kicklast")]
+        public async Task KickUserLast(int time, char timeFormat, [Remainder]string reason = null)
         {
-            var curTime = DateTime.UtcNow;
+            var curUtcTime = DateTime.UtcNow;
             List<SocketGuildUser> usersToKick = null;
-            if (timeFormat == 'h')
+            if (timeFormat == 'h') // 24 h limit
             {
-                usersToKick = Context.Guild.Users.Where(x => x.JoinedAt.Value.UtcDateTime > curTime.AddHours(-time)).ToList();
+                if (time > 24)
+                    time = 24;
+                usersToKick = Context.Guild.Users.Where(x => x.JoinedAt.Value.UtcDateTime > curUtcTime.AddHours(-time)).ToList();
             }
-            if (timeFormat == 'm')
+            if (timeFormat == 'm') // 48 h limit
             {
-                usersToKick = Context.Guild.Users.Where(x => x.JoinedAt.Value.UtcDateTime > curTime.AddMinutes(-time)).ToList();
+                if (time > 1440)
+                    time = 1440;
+                usersToKick = Context.Guild.Users.Where(x => x.JoinedAt.Value.UtcDateTime > curUtcTime.AddMinutes(-time)).ToList();
             }
-            if (timeFormat == 's')
+            if (timeFormat == 's') // 10 min limit
             {
-                usersToKick = Context.Guild.Users.Where(x => x.JoinedAt.Value.UtcDateTime > curTime.AddSeconds(-time)).ToList();
+                if (time > 600)
+                    time = 600;
+                usersToKick = Context.Guild.Users.Where(x => x.JoinedAt.Value.UtcDateTime > curUtcTime.AddSeconds(-time)).ToList();
             }
 
             if (usersToKick != null)
             {
-                // TODO Kick users
-            }
 
+                foreach (var user in usersToKick)
+                {
+                    await user.KickAsync(reason);
+                }
+
+                string resultString = "Kicked Users:\n";
+                foreach (var user in usersToKick)
+                {
+                    resultString += $"<@{user.Id}>, ";
+                }
+                await ReplyAsync(resultString);
+            }
+            else
+            {
+                await ReplyAsync("Couldn't find any users fitting the current conditions.");
+            }
         }
 
         #endregion
