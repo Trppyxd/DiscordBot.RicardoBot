@@ -1,4 +1,4 @@
-﻿using System;
+﻿ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.Entity.Core.Metadata.Edm;
@@ -278,6 +278,34 @@ namespace DiscordBot.BlueBot.Modules
 
         #endregion
 
+        #region Kick Recently Joined Command
+
+        public async Task KickUserLast(int time, char timeFormat)
+        {
+            var curTime = DateTime.UtcNow;
+            List<SocketGuildUser> usersToKick = null;
+            if (timeFormat == 'h')
+            {
+                usersToKick = Context.Guild.Users.Where(x => x.JoinedAt.Value.UtcDateTime > curTime.AddHours(-time)).ToList();
+            }
+            if (timeFormat == 'm')
+            {
+                usersToKick = Context.Guild.Users.Where(x => x.JoinedAt.Value.UtcDateTime > curTime.AddMinutes(-time)).ToList();
+            }
+            if (timeFormat == 's')
+            {
+                usersToKick = Context.Guild.Users.Where(x => x.JoinedAt.Value.UtcDateTime > curTime.AddSeconds(-time)).ToList();
+            }
+
+            if (usersToKick != null)
+            {
+                // TODO Kick users
+            }
+
+        }
+
+        #endregion
+
         #region Anti-Raid Command
 
         [RequireUserPermission(GuildPermission.Administrator, ErrorMessage = "Admin only command.")]
@@ -472,7 +500,11 @@ namespace DiscordBot.BlueBot.Modules
             var user = Context.Guild.GetUser(Convert.ToUInt64(Utilities.CleanId(dUser)[0]));
             var joinedAt = db.GetDBUserByDiscordId(user.Id).JoinDate;
             await Context.Channel.SendMessageAsync(
-                $"WhoIs:\nName:{user.Username} - ID:{user.Id}\nJoined at:{joinedAt:dd/MM/yy hh:mm:ss}\nCreated At:{user.CreatedAt}\nIs Bot:{user.IsBot}");
+                $"WhoIs:\n" +
+                $"Name:{user.Username} - ID:{user.Id}\n" +
+                $"Joined at:{joinedAt:dd/MM/yy hh:mm:ss}\n" +
+                $"Created At:{user.CreatedAt}\n" +
+                $" Is Bot:{user.IsBot}");
         }
 
         #endregion
@@ -567,7 +599,7 @@ namespace DiscordBot.BlueBot.Modules
             {
                 msg += $"#{user.Id} [{user.JoinDate:dd/MM/yy hh:mm:ss}] - {user.DiscordId} - {user.Username} [{user.IsMember}]" + Environment.NewLine;
             }
-            await Context.Channel.SendMessageAsync(msg);
+            await ReplyAsync(msg);
         }
 
         #endregion

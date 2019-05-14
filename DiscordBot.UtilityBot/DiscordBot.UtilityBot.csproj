@@ -280,7 +280,6 @@
     <Compile Include="Constants.cs" />
     <Compile Include="Core\UserAccount.cs" />
     <Compile Include="DBase.cs" />
-    <Compile Include="DataStorage.cs" />
     <Compile Include="Modules\CommandsModule.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
