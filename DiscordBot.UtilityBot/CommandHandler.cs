@@ -33,12 +33,12 @@ namespace DiscordBot.BlueBot
 
         #region Helpers
 
-        private SocketTextChannel GetUserGuildTextChannelByName(SocketGuildUser user, string ChannelName)
+        public SocketTextChannel GetUserGuildTextChannelByName(SocketGuildUser user, string ChannelName)
         {
             return user.Guild.Channels.First(x => x.Name.ToLower().Contains(ChannelName)) as SocketTextChannel;
         }
 
-        private SocketVoiceChannel GetUserGuildVoiceChannelByName(SocketGuildUser user, string ChannelName)
+        public SocketVoiceChannel GetUserGuildVoiceChannelByName(SocketGuildUser user, string ChannelName)
         {
             return user.Guild.Channels.First(x => x.Name.ToLower().Contains(ChannelName)) as SocketVoiceChannel;
         }
@@ -135,7 +135,7 @@ namespace DiscordBot.BlueBot
             else
             {
                 await channel.SendMessageAsync(
-                    $"User {user.Mention} - {user.ToString()} left the guild at {DateTimeOffset.UtcNow}.");
+                    $"User {user.Mention} - {user.ToString()} **left** the guild at {DateTimeOffset.UtcNow}.");
             }
             Utilities.LogConsole(Utilities.LogFormat.USER_LEFT,
                 $"User {user.ToString()} - {user.Id} has left {user.Guild}");
