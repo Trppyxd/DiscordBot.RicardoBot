@@ -1,4 +1,4 @@
-﻿ using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.Entity.Core.Metadata.Edm;
@@ -18,7 +18,9 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using DiscordBot.BlueBot.Core;
 using DiscordBot_BlueBot;
+using DiscordBot_BlueBot.Models;
 using SQLite;
+using HtmlAgilityPack;
 
 namespace DiscordBot.BlueBot.Modules
 {
@@ -511,6 +513,133 @@ namespace DiscordBot.BlueBot.Modules
 
         #region Miscellaneous - Category
 
+        public static HtmlWeb WebClient = new HtmlWeb();
+        [Command("bm")]
+        public async Task GetServerInfo([Remainder]string serverSearch)
+        {
+            Dictionary<string, string> descriptionDictionary = new Dictionary<string, string>();
+            List<PlayerModel> playerList = new List<PlayerModel>();
+
+            int playerCount;
+            int maxPlayerCount;
+            int playerQueue = 0;
+
+            var serverName = "";
+
+            var firstSearchResultServerEndUrl = "";
+            HtmlNode serverSearchResults = null;
+
+
+            serverSearch = serverSearch.Replace(" ", "%20");
+
+            var searchQuery = $"https://www.battlemetrics.com/servers/rust?q={serverSearch}&sort=score";
+
+            var serverSearchDoc = WebClient.Load(searchQuery);
+            serverSearchResults = serverSearchDoc.DocumentNode.SelectSingleNode("//table[@class='css-1yjs8zt']/tbody");
+
+            if (!serverSearchResults.HasChildNodes)
+            {
+                await ReplyAsync("No servers with that name were found!");
+                return;
+            }
+
+            serverName = serverSearchResults.SelectSingleNode("//table[@class='css-1yjs8zt']/tbody/tr[1]/td[@class='css-h3nn23']/a").InnerText;
+
+            firstSearchResultServerEndUrl = serverSearchResults.SelectSingleNode("//table[@class='css-1yjs8zt']/tbody/tr[1]/td[@class='css-h3nn23']/a").GetAttributeValue("href", "/servers/rust/0000000");
+
+            var doc = WebClient.Load($"https://www.battlemetrics.com{firstSearchResultServerEndUrl}");
+            var serverPageNode = doc.DocumentNode.SelectSingleNode(@"//div[@id='serverPage']");
+            var serverInfoNode = serverPageNode.SelectSingleNode(@"div[@class='row']/div[@class='col-md-6 server-info']");
+            var descriptionListNodes = serverInfoNode.SelectNodes(@".//dl");
+
+            string playerName = "", playerPlaytime = "";
+            string dKey = "", dValue = "";
+
+            // Get server info/description
+            if (descriptionListNodes != null)
+            {
+                foreach (var node in descriptionListNodes)
+                {
+                    var dt = node.SelectNodes(@".//dt");
+                    var dd = node.SelectNodes(@".//dd");
+
+                    for (int i = 0; i < dt.Count; i++)
+                    {
+                        dKey = dValue = "";
+
+                        dKey = dt[i].InnerText;
+                        dValue = dd[i].InnerText;
+
+                        if (dValue.EndsWith("Downtime History"))
+                            dValue = dValue.Replace("Downtime History", "");
+
+                        if (string.IsNullOrWhiteSpace(dValue))
+                        {
+                            dValue = dd[i].SelectSingleNode(@"*").GetAttributeValue("title", "Empty");
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(dKey))
+                        {
+                            descriptionDictionary.Add(dKey, dValue);
+                        }
+                    }
+                }
+            }
+
+            string playerCountString = "";
+
+            if (descriptionDictionary.ContainsKey("Player count"))
+                playerCountString = descriptionDictionary["Player count"];
+
+            // Get server's player and max player counts.
+
+            var splitString = playerCountString.Split('/');
+            playerCount = int.Parse(splitString[0]);
+            maxPlayerCount = int.Parse(splitString[1].Split(' ')[0]);
+
+
+
+            // Check if there is a queue on the server, (ex. 115/120 (24)) means there's 24 players in queue
+            if (playerCountString.Contains('('))
+            {
+                var index = playerCountString.IndexOf('(') + 1;
+                var len = playerCountString.Length;
+                playerQueue = int.Parse(playerCountString.Substring(index, len - index - 1));
+            }
+
+            var serverPlayersNode = doc.DocumentNode.SelectSingleNode(@"//table[@class='css-1y3vvw9']");
+            var playerNodes = serverPlayersNode.SelectNodes(@"tbody/*");
+
+            // Get players
+            if (playerNodes != null)
+            {
+                foreach (var node in playerNodes)
+                {
+                    // Needs to be initialized within the loop, if outside then all the items will be duplicates of the last added item
+                    PlayerModel player = new PlayerModel();
+
+                    playerName = node.SelectSingleNode("td[1]").InnerText;
+                    playerPlaytime = node.SelectSingleNode("td[2]").InnerText;
+
+                    // First player in the collection has style included in the InnerText, this is to normalize the list.
+                    if (playerName.Contains(".css-1dpmhly{display:inline-block;min-height:20px;min-width:20px;white-space:pre-wrap;}"))
+                        playerName = playerName.Replace(".css-1dpmhly{display:inline-block;min-height:20px;min-width:20px;white-space:pre-wrap;}", "");
+
+                    player.Name = playerName;
+                    player.Playtime = playerPlaytime;
+
+                    playerList.Add(player);
+                }
+            }
+
+            // Get events
+            //var serverEventsNode = doc.DocumentNode.SelectSingleNode("//div[@class='css-pwip2z']/div/div");
+
+            await ReplyAsync($"Server: \"{serverName}\" \n" +
+                             $"PlayerCount: {playerCount}/{maxPlayerCount} \n" +
+                             $"Queue: {playerQueue}");
+
+        }
 
         #region WhoIs Command
 
