@@ -513,6 +513,8 @@ namespace DiscordBot.BlueBot.Modules
 
         #region Miscellaneous - Category
 
+        #region Battlemetrics Command
+
         public static HtmlWeb WebClient = new HtmlWeb();
         [Command("bm")]
         public async Task GetServerInfo([Remainder]string serverSearch)
@@ -640,6 +642,8 @@ namespace DiscordBot.BlueBot.Modules
                              $"Queue: {playerQueue}");
 
         }
+
+        #endregion
 
         #region WhoIs Command
 
