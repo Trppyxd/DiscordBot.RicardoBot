@@ -12,7 +12,6 @@ Variable | Requirement | Description
 **cmdPrefix** | High | Prefix that is preceding a command. If left empty then u can only call commands only via the bot's tag.
 **botCommandChannel** | Optional | Name of the channel where you're going to call the bot commands from. By Default the bot is set to delete all messages calling the Bot, except the `botCommandChannel`.
 
-~~By Default the bot is set to delete all commands calling the Bot, except the bot channel that's set in `config.json`~~
 
 ## Commands
 All commands are preceded by a prefix, or the mention tag of the bot (eg. `@bot#1111`). The prefix can be set in `config.json`.
@@ -20,20 +19,20 @@ All commands are preceded by a prefix, or the mention tag of the bot (eg. `@bot#
 ### Fun
 Commands|Parameters|Description
 -|-|-
-echo[say] |**string** Message|Repeat the provided message.
-choose[pick] |**string** 1\|2\|3|Picks one random option from the provided collection.
+echo _[say]_ |**string** Message|Repeat the provided message.
+choose _[pick]_ |**string** 1\|2\|3|Picks one random option from the provided collection.
 poll|**string** pollMessage|Creates a poll that you can vote on by clicking the linked emotes.
 
 ### Moderation
 Commands|Parameters|Description
 -|-|-
-purge[delete,del,prune] |_**int** amount = 10_|Deletes `amount` of messages from a text channel.
+purge _[delete,del,prune]_ |_**int** amount = 10_|Deletes `amount` of messages from a text channel.
 move|**string** VoiceChannel, **string** user| Mention a destination `voice channel` and user/s to be moved to that channel(users must already be in a voice channel for it to work)
 kick|**string** userMention|Kicks user/s mentioned.
 kicklast|**int** time, **char** timeFormat `s/m/h`, _**string** reason = null_| Kicks users that joined the guild within the provided timeframe.
 antiraid|**string** option, _**string** ban = "off"_|Toggle antiraid mode in the current guild which kicks/bans any user that joins while it's active, can optionally provide a reason.
-getmessages[getmsgs, getpms, getdms]|**string** UserTag, **int** amount = 10|Gets the messages in a private channel with the specified user.
-msg[pm,dm] |**string** UserTag, **string** message|Messages an User in private channel with the provided message.
+getmessages _[getmsgs, getpms, getdms]_|**string** UserTag, **int** amount = 10|Gets the messages in a private channel with the specified user.
+msg _[pm,dm]_ |**string** UserTag, **string** message|Messages an User in private channel with the provided message.
 
 ### Miscellaneous
 Commands|Parameters|Description
